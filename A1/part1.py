@@ -18,11 +18,13 @@ def euclideanDistance (X, Z):
 
 def KNearestNeighbours (distance, k):
     top_k_vals, top_k_indices = tf.nn.top_k(tf.negative(distance), k=k)
-    responsibility = tf.Variable(tf.zeros(shape=tf.shape(distance[0]), dtype=tf.float32))
     # updates.shape = indices.shape + ref.shape[1:]
-    updates_shape = top_k_indices.get_shape().as_list() + responsibilities.get_shape().as_list()[1:]
-    updates = tf.fill(dims=updates_shape, value=tf.to_float(1/k))
+    updates_shape = top_k_indices.get_shape().as_list() + responsibility.get_shape().as_list()[1:]
+    updates = tf.fill(dims=updates_shape, value=tf.to_float(1.0/k))
     responsibility = tf.scatter_update(responsibility, indices=top_k_indices, updates=updates)
+    # responsibility is a (dim,) vector -> Reshape to (1, dim)
+    dim = responsibility.get_shape().as_list()[0]
+    responsibility = tf.reshape(responsibility, shape=[1, dim])
     return responsibility
 
 if __name__ == "__main__":
@@ -48,23 +50,37 @@ if __name__ == "__main__":
 
     feed_dict1 = {X_tf: X, Z_tf: Z}
 
-    X1 = [[1, 2], [3, 4], [5, 6]]
-    Z1 = [[0, 0], [1.5, 2.5]]
+    X1 = [[1, 2], [3, 4], [5, 6]]       # N1xd
+    Y1 = [[10], [20], [30]]             # N1x1
+    Z1 = [[0, 0], [1.5, 2.5]]           # N2xd
     
     X1_tf = tf.placeholder(tf.float32, [3, 2])
+    Y1_tf = tf.placeholder(tf.float32, [3, 1])
     Z1_tf = tf.placeholder(tf.float32, [2, 2])
 
-    feed_dict2 = {X1_tf:X1, Z1_tf: Z1}
+    feed_dict2 = {X1_tf:X1, Y1_tf: Y1, Z1_tf: Z1}
 
     K = 2
 
-    #distance = euclideanDistance(Z_tf, X_tf)
-    distance = euclideanDistance(Z1_tf, X1_tf)
-    #distance = euclideanDistance(X_vt, X_train)
+    with tf.Session() as sess:
 
-    KNearestNeighbours(distance, K)
+        #distance = euclideanDistance(Z_tf, X_tf)
+        distances = euclideanDistance(Z1_tf, X1_tf)     # N2xN1
+        #distance = euclideanDistance(X_vt, X_train)
 
-    sess = tf.InteractiveSession()
-    init = tf.global_variables_initializer()
+        #print("distances", distances.get_shape().as_list())
+        #print(sess.run(distances, feed_dict=feed_dict2))
 
-    sess.run(init)
+        N2 = distances.get_shape().as_list()[0]
+        for i in range(N2):
+            distance = tf.gather(distances, i)
+            #print("distance", distance.get_shape().as_list())
+            #print(sess.run(distance, feed_dict=feed_dict2))
+            responsibility = KNearestNeighbours(distance, K)
+            init = tf.global_variables_initializer()
+            sess.run(init)
+            #print(sess.run(responsibility, feed_dict=feed_dict2))
+            #print("responsibility", responsibility.get_shape().as_list())
+            #print("Y1_tf", Y1_tf.get_shape().as_list())
+            pred = tf.matmul(responsibility, Y1_tf)
+            #print(sess.run(pred, feed_dict=feed_dict2))
