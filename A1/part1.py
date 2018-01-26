@@ -17,34 +17,20 @@ def euclideanDistance (X, Z):
     eucDist = tf.reduce_sum(tf.square(X - Z), axis=2)
     return eucDist
 
-def KNearestNeighbours (distances, row, k):
-    distance = tf.gather(distances, row)
-    top_k_vals, top_k_indices = tf.nn.top_k(tf.negative(distance), k=k)
-    responsibility = tf.Variable(tf.zeros(shape=distance.get_shape().as_list(), dtype=tf.float32))
-    updates_shape = top_k_indices.get_shape().as_list() + distance.get_shape().as_list()[1:]
-    updates = tf.fill(dims=updates_shape, value=tf.to_float(1.0/k))
-    responsibility = tf.scatter_update(responsibility, indices=top_k_indices, updates=updates)
-    # responsibility is a (dim,) vector -> Reshape to (1, dim)
-    dim = responsibility.get_shape().as_list()[0]
-    responsibility = tf.reshape(responsibility, shape=[dim, 1])
+def KNearestNeighbours (distances, k):
+    top_k_vals, top_k_indices = tf.nn.top_k(tf.negative(distances), k=k)
+    one_hot = tf.one_hot(top_k_indices, depth=80, on_value=tf.to_float(1.0/k))
+    responsibility = tf.reduce_sum(one_hot, axis=1)
     return responsibility
 
 def calculate_MSE(X_train, Y_train, X_test, Y_test, K):
     distances = euclideanDistance(X_test, X_train)
     N1 = distances.get_shape().as_list()[0]
     MSE = tf.Variable(0.0, name="mse")
-    for i in range(N1):
-        responsibility = KNearestNeighbours(distances, i, K)
-        Y_head = tf.matmul(tf.transpose(Y_train), responsibility)
-        #print("Y_train: ", Y_train.shape)
-        #print("Y_train transpose: ", tf.transpose(Y_train).shape)
-        #print("responsibility: ", responsibility)
-        #print("Y_head, ", Y_head.shape)
-        #print("Y_test[i], ", Y_test[i].shape)
-        #print("Y_test[i] - Y_head, ", (Y_test[i] - Y_head).shape)
-        err = tf.reduce_sum(tf.square(Y_test[i] - Y_head))
-        MSE += err
-    MSE /= 2*N1
+    responsibility = KNearestNeighbours(distances, K)
+    Y_head = tf.matmul(responsibility, Y_train)
+    MSE = tf.reduce_sum(tf.square(Y_test - Y_head))
+    MSE /= tf.to_float(2*N1)
     return MSE
     
 
@@ -100,4 +86,3 @@ if __name__ == "__main__":
             print("training MSE loss: ", sess.run(MSE_train, {X_train: trainData, Y_train: trainTarget}))
             print("valid MSE loss: ", sess.run(MSE_valid, {X_train: trainData, Y_train: trainTarget, X_valid: validData, Y_valid: validTarget}))
             print("test MSE loss: ", sess.run(MSE_test, {X_train: trainData, Y_train: trainTarget, X_test: testData, Y_test: testTarget}))
-            #sess.run(init)
