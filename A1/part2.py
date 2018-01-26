@@ -52,3 +52,27 @@ if __name__ == "__main__":
             print("training MSE loss: ", sess.run(MSE_train, {X_train: trainData, Y_train: trainTarget}))
             print("valid MSE loss: ", sess.run(MSE_valid, {X_train: trainData, Y_train: trainTarget, X_valid: validData, Y_valid: validTarget}))
             print("test MSE loss: ", sess.run(MSE_test, {X_train: trainData, Y_train: trainTarget, X_test: testData, Y_test: testTarget}))
+    New_Data = np.linspace(0.0 , 11.0 , num =1000) [:, np.newaxis]
+    New_Target = np.sin( New_Data ) + 0.1 * np.power( New_Data , 2) + 0.5 * np.random.randn(1000 , 1)
+
+    X_new_test = tf.placeholder(tf.float32, [1000,1])
+    Deuc = part1.euclideanDistance(X_new_test, X_train)
+    Predictions = dict.fromkeys(Ks)
+    with tf.Session() as sess:
+        for K in Ks:
+            responsibility = KNearestNeighbours(Deuc, K)
+            Y_head = tf.matmul(responsibility, Y_train)
+            Y_head = tf.reduce_sum(Y_head, axis=1)
+            init = tf.global_variables_initializer()
+            sess.run(init)
+            Predictions[K] = sess.run(Y_head, {X_train: trainData, X_new_test: New_Data, Y_train: trainTarget})
+    plt.close('all')
+    plt.scatter(New_Data, New_Target, marker='.', label='True Target')
+    plt.xlabel('input Data (X)')
+    plt.ylabel('predictions (Y head) and target values (Y)')
+    K_max = float(max(Ks))
+    for K in Ks:
+        plt.plot(New_Data, Predictions[K], c=(np.random.uniform(0.0,1.0) , np.random.uniform(0.0,1.0) , np.random.uniform(0.0,1.0) ), label=("Predictions when K=%d" % K))
+    plt.legend()
+    plt.show()
+        
