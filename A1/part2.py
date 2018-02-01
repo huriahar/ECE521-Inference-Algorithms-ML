@@ -7,11 +7,12 @@ import part1
 
 def KNearestNeighbours (distances, k):
     top_k_vals, top_k_indices = tf.nn.top_k(tf.negative(distances), k=k)
-    one_hot = tf.one_hot(top_k_indices, depth=80, on_value=tf.to_float(1.0/k))
+    N = distances.get_shape().as_list()[0]
+    one_hot = tf.one_hot(top_k_indices, depth=N, on_value=tf.to_float(1.0/k))
     responsibility = tf.reduce_sum(one_hot, axis=1)
     return responsibility
 
-def calculate_MSE(X_train, Y_train, X_test, Y_test, K):
+def calculateMSE(X_train, Y_train, X_test, Y_test, K):
     distances = part1.euclideanDistance(X_test, X_train)
     N1 = distances.get_shape().as_list()[0]
     MSE = tf.Variable(0.0, name="mse")
@@ -44,14 +45,15 @@ if __name__ == "__main__":
     with tf.Session() as sess:
         for K in Ks:
             print("K=%d:"%K)
-            MSE_train = calculate_MSE(X_train, Y_train, X_train, Y_train, K)
-            MSE_valid = calculate_MSE(X_train, Y_train, X_valid, Y_valid, K)
-            MSE_test = calculate_MSE(X_train, Y_train, X_test, Y_test, K)
+            MSE_train = calculateMSE(X_train, Y_train, X_train, Y_train, K)
+            MSE_valid = calculateMSE(X_train, Y_train, X_valid, Y_valid, K)
+            MSE_test = calculateMSE(X_train, Y_train, X_test, Y_test, K)
             init = tf.global_variables_initializer()
             sess.run(init)
             print("training MSE loss: ", sess.run(MSE_train, {X_train: trainData, Y_train: trainTarget}))
             print("valid MSE loss: ", sess.run(MSE_valid, {X_train: trainData, Y_train: trainTarget, X_valid: validData, Y_valid: validTarget}))
             print("test MSE loss: ", sess.run(MSE_test, {X_train: trainData, Y_train: trainTarget, X_test: testData, Y_test: testTarget}))
+    
     New_Data = np.linspace(0.0 , 11.0 , num =1000) [:, np.newaxis]
     New_Target = np.sin( New_Data ) + 0.1 * np.power( New_Data , 2) + 0.5 * np.random.randn(1000 , 1)
 
