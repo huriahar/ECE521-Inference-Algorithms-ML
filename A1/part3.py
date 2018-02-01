@@ -9,8 +9,8 @@ def calculateClassificationError(prediction, target):
     diff = tf.subtract(target, prediction)
     incorrectPrediction = tf.count_nonzero(diff)
     N = target.get_shape().as_list()[0]
-    accuracy = ((N - incorrectPrediction)/N)*100
-    return accuracy
+    accuracy = tf.divide(tf.subtract(N, tf.cast(incorrectPrediction, tf.int32)), N)*100
+    return incorrectPrediction, accuracy
 
 def KNearestNeighbours (distances, k):
     top_k_vals, top_k_indices = tf.nn.top_k(tf.negative(distances), k=k)
@@ -22,7 +22,6 @@ def prediction(X_train, Y_train, X_test, K):
     distances = part1.euclideanDistance(X_test, X_train)
     
     N1 = distances.get_shape().as_list()[0]
-
     # Get indices of the K nearest neighbours for the distances matrix
     topKNeighbours = KNearestNeighbours(distances, K)
 
@@ -53,7 +52,7 @@ def dataSegmentation(data_path, target_path, task):
     # task = 0 >>  select the name ID targets for face recognition task
     # task = 1 >>  select the gender ID targets for gender recognition task
 
-    data = np.load(data_path)/255
+    data = np.load(data_path)/255.0
     data = np.reshape(data, [-1,32*32])
     target = np.load(target_path)
 
@@ -78,7 +77,7 @@ if __name__ == "__main__":
     
     with tf.Session() as sess:
 
-        task = 1 #0- celebrity classification, #1- Gender classification
+        task = 0 #0- celebrity classification, #1- Gender classification
         trainData, validData, testData, trainTarget, validTarget, testTarget = dataSegmentation('data.npy','target.npy', task)
         X_train = tf.placeholder(tf.float32, trainData.shape)
         X_valid = tf.placeholder(tf.float32, validData.shape)
@@ -98,9 +97,9 @@ if __name__ == "__main__":
             PredictionTrain = prediction(X_train, Y_train, X_train, K)
             PredictionValid= prediction(X_train, Y_train, X_valid, K)
             PredictionTest = prediction(X_train, Y_train, X_test ,K)
-            accuracyTrain = calculateClassificationError(PredictionTrain, Y_train)
-            accuracyValid = calculateClassificationError(PredictionValid, Y_valid)
-            accuracyTest = calculateClassificationError(PredictionTest, Y_test)
+            incorTrain, accuracyTrain = calculateClassificationError(PredictionTrain, Y_train)
+            invorValid,  accuracyValid = calculateClassificationError(PredictionValid, Y_valid)
+            incorTest, accuracyTest = calculateClassificationError(PredictionTest, Y_test)
             print("training accuracy: ", sess.run(accuracyTrain, {X_train: trainData, Y_train: trainTarget}))
             print("valid accuracy: ", sess.run(accuracyValid, {X_train: trainData, Y_train: trainTarget, X_valid: validData, Y_valid: validTarget}))
             print("test accuracy: ", sess.run(accuracyTest, {X_train: trainData, Y_train: trainTarget, X_test: testData, Y_test: testTarget}))
