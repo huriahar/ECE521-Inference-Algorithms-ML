@@ -4,10 +4,11 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import part1
+from matplotlib import interactive
 
 def KNearestNeighbours (distances, k):
     top_k_vals, top_k_indices = tf.nn.top_k(tf.negative(distances), k=k)
-    N = distances.get_shape().as_list()[0]
+    N = distances.get_shape().as_list()[1]
     one_hot = tf.one_hot(top_k_indices, depth=N, on_value=tf.to_float(1.0/k))
     responsibility = tf.reduce_sum(one_hot, axis=1)
     return responsibility
@@ -69,12 +70,13 @@ if __name__ == "__main__":
             sess.run(init)
             Predictions[K] = sess.run(Y_head, {X_train: trainData, X_new_test: New_Data, Y_train: trainTarget})
     plt.close('all')
-    plt.scatter(New_Data, New_Target, marker='.', label='True Target')
-    plt.xlabel('input Data (X)')
-    plt.ylabel('predictions (Y head) and target values (Y)')
-    K_max = float(max(Ks))
-    for K in Ks:
-        plt.plot(New_Data, Predictions[K], c=(np.random.uniform(0.0,1.0) , np.random.uniform(0.0,1.0) , np.random.uniform(0.0,1.0) ), label=("Predictions when K=%d" % K))
-    plt.legend()
+    figs = dict.fromkeys(range(1,len(Ks)+1))
+    for i, K in enumerate(Ks):
+        figs[i+1] = plt.figure(i+1)
+        plt.scatter(New_Data, New_Target, marker='.', label='True Target')
+        plt.xlabel('input Data (X)')
+        plt.ylabel('predictions (Y head) and target values (Y)')
+        plt.plot(New_Data, Predictions[K], c='r', label=("Predictions when K=%d" % K))
+        plt.legend()
     plt.show()
         
