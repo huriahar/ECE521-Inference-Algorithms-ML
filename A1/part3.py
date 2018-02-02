@@ -5,16 +5,16 @@ import os
 import matplotlib.pyplot as plt
 import part1
 
-def calculateClassificationError(prediction, target):
+def calculateClassificationAccuracy (prediction, target):
     diff = tf.subtract(target, prediction)
     incorrectPrediction = tf.count_nonzero(diff)
     N = target.get_shape().as_list()[0]
     accuracy = tf.divide(tf.subtract(N, tf.cast(incorrectPrediction, tf.int32)), N)*100
-    return incorrectPrediction, accuracy
+    return accuracy
 
 def KNearestNeighbours (distances, k):
-    top_k_vals, top_k_indices = tf.nn.top_k(tf.negative(distances), k=k)
-    return top_k_indices
+    topKVals, topKIndices = tf.nn.top_k(tf.negative(distances), k=k)
+    return topKIndices
 
 # Returns a prediction vector for X_test
 def prediction(X_train, Y_train, X_test, K):
@@ -36,13 +36,13 @@ def prediction(X_train, Y_train, X_test, K):
     for i in range(N1):
 
         #get the best label id(s) for input data i
-        best_labels_ids = tf.gather(bestLabels, i)
+        bestLabelIds = tf.gather(bestLabels, i)
 
         #count the frequency of each class and finally pick the class with the highest frequency
         #as the prediction value z
-        values, indices, counts = tf.unique_with_counts(best_labels_ids)
-        max_count_index = tf.argmax(counts)
-        z = tf.gather(values, max_count_index)
+        values, indices, counts = tf.unique_with_counts(bestLabelIds)
+        maxCountIndex = tf.argmax(counts)
+        z = tf.gather(values, maxCountIndex)
         prediction.append(z)
 
     prediction = tf.stack(prediction)
@@ -97,9 +97,9 @@ if __name__ == "__main__":
             PredictionTrain = prediction(X_train, Y_train, X_train, K)
             PredictionValid= prediction(X_train, Y_train, X_valid, K)
             PredictionTest = prediction(X_train, Y_train, X_test ,K)
-            incorTrain, accuracyTrain = calculateClassificationError(PredictionTrain, Y_train)
-            invorValid,  accuracyValid = calculateClassificationError(PredictionValid, Y_valid)
-            incorTest, accuracyTest = calculateClassificationError(PredictionTest, Y_test)
+            accuracyTrain = calculateClassificationAccuracy (PredictionTrain, Y_train)
+            accuracyValid = calculateClassificationAccuracy (PredictionValid, Y_valid)
+            accuracyTest = calculateClassificationAccuracy (PredictionTest, Y_test)
             print("training accuracy: ", sess.run(accuracyTrain, {X_train: trainData, Y_train: trainTarget}))
             print("valid accuracy: ", sess.run(accuracyValid, {X_train: trainData, Y_train: trainTarget, X_valid: validData, Y_valid: validTarget}))
             print("test accuracy: ", sess.run(accuracyTest, {X_train: trainData, Y_train: trainTarget, X_test: testData, Y_test: testTarget}))
