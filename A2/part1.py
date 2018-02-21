@@ -11,7 +11,9 @@ def loadData (fileName):
         posClass = 2
         negClass = 9
         dataIndx = (Target == posClass) + (Target == negClass)
+        print(dataIndx)
         Data = Data[dataIndx]/255.0
+        Data = Data.reshape(-1,28*28)
         Target = Target[dataIndx].reshape(-1, 1)
         Target[Target == posClass] = 1
         Target[Target == negClass] = 0
@@ -33,8 +35,13 @@ if __name__ == "__main__":
     XValid = tf.placeholder(tf.float64, validData.shape)
     YValid = tf.placeholder(tf.int32, validTarget.shape)
 
-    XTest  = tf.placeholder(tf.float64, testData.shape)   
+    XTest  = tf.placeholder(tf.float64, testData.shape)
     YTest  = tf.placeholder(tf.int32, testTarget.shape)
+
+    w = tf.Variable(tf.ones(XTrain.shape[1:],dtype=tf.float64))
+    w = tf.expand_dims(w,-1)
+    b = tf.Variable(tf.zeros([1], dtype=tf.float64))
+    y_head = tf.matmul(XTrain,w) + b
 
     init = tf.global_variables_initializer()
     sess.run(init)
