@@ -44,7 +44,7 @@ if __name__ == "__main__":
     w = tf.Variable(tf.truncated_normal([d, 1], dtype=tf.float64), name="weights")
     b = tf.Variable(0.0, dtype=tf.float64, name="biases")
     YHead = tf.matmul(XTrain,w) + b
-    N = XTrain.get_shape().as_list()[0]
+    N = len(trainData)
     loss = tf.reduce_sum(tf.squared_difference(YHead, YTrain))
     loss = tf.divide(loss,tf.to_double(2*N))
     regularizer = tf.nn.l2_loss(w)
@@ -73,7 +73,7 @@ if __name__ == "__main__":
         plt.title("MSE vs number of epoch for learning rate of %f" % lr)
         fig.savefig("part1_1_learnrate_%d.png"%index)
         fig = plt.figure(index * 2 + 2)
-        plt.scatter(range(5000,epochs), L[5000:], marker='.', )
+        plt.scatter(range(1500,epochs), L[1500:], marker='.', )
         plt.xlabel('the n-th epoch')
         plt.ylabel('loss')
         plt.title("MSE vs number of epoch for learning rate of %f" % lr)
