@@ -57,7 +57,7 @@ if __name__ == "__main__":
     epochs = int(np.ceil(iteration/float(iterPerEpoch)))
     plt.close('all')
     for index, lr in enumerate(learnRate):
-        fig = plt.figure(index + 1)
+        fig = plt.figure(index*2 + 1)
         optimizer = tf.train.GradientDescentOptimizer(lr).minimize(loss)
         L = [None for ep in range(epochs)]
         for ep in range(epochs):
@@ -72,6 +72,15 @@ if __name__ == "__main__":
         plt.ylabel('loss')
         plt.title("MSE vs number of epoch for learning rate of %f" % lr)
         fig.savefig("part1_1_learnrate_%d.png"%index)
+        fig = plt.figure(index * 2 + 2)
+        plt.scatter(range(5000,epochs), L[5000:], marker='.', )
+        plt.xlabel('the n-th epoch')
+        plt.ylabel('loss')
+        plt.title("MSE vs number of epoch for learning rate of %f" % lr)
+        fig.savefig("part1_1_learnrate_%d_zoomedin.png" % index)
+        w = tf.Variable(tf.truncated_normal([d, 1], dtype=tf.float64), name="weights")
+        b = tf.Variable(0.0, dtype=tf.float64, name="biases")
+        sess.run(init)
 
     #####################
 
