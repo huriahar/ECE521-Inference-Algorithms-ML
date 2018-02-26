@@ -35,7 +35,7 @@ if __name__ == "__main__":
     XTest = tf.placeholder(tf.float64, testData.shape)
     YTest = tf.placeholder(tf.float64, testTarget.shape)
 
-    # part1.1
+    # part1.2
     batchSizes = [500, 1500, 3500]
     d = 784
     iteration = 20000.
@@ -75,7 +75,4 @@ if __name__ == "__main__":
 
         print("Batch size %d: loss=%f , took %f seconds to execute" % (batchSize, L, end-start))
 
-        #####################
-
-        # print(sess.run(YTrain,{YTrain:trainTarget}))
 

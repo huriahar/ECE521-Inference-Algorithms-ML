@@ -1,6 +1,7 @@
 from __future__ import print_function
 import numpy as np
 import tensorflow as tf
+import time
 
 sess = tf.InteractiveSession()
 
@@ -32,8 +33,7 @@ if __name__ == "__main__":
 
     XTest = tf.placeholder(tf.float64, testData.shape)
     YTest = tf.placeholder(tf.float64, testTarget.shape)
-
-    # part1.1
+    # part1.3
     batchSize = 500
     d = 784
     iteration = 20000.
@@ -43,6 +43,7 @@ if __name__ == "__main__":
     best_ldas = ldas[0]
     min_lossValid = 1000000.0
     N = len(trainData)
+    NValid = len(validData)
     iterPerEpoch = int(N / batchSize)
     epochs = int(np.ceil(iteration / float(iterPerEpoch)))
     XTrain = tf.placeholder(tf.float64, [batchSize, d])
@@ -59,15 +60,18 @@ if __name__ == "__main__":
         sess.run(init)
         optimizer = tf.train.GradientDescentOptimizer(learnRate).minimize(loss)
         L = [None for ep in range(epochs)]
+        #record training time
+        start = time.time()
         for ep in range(epochs):
             for i in range(iterPerEpoch):
                 XBatch = trainData[i * batchSize:(i + 1) * batchSize]
                 YBatch = trainTarget[i * batchSize:(i + 1) * batchSize]
                 feed = {XTrain: XBatch, YTrain: YBatch}
                 _, L[ep] = sess.run([optimizer, loss], feed_dict=feed)
+        end = time.time()
         YHeadValid = tf.matmul(XValid, w) + b
         lossValid = tf.reduce_sum(tf.squared_difference(YHeadValid, YValid))
-        lossValid = tf.divide(lossValid, tf.to_double(2 * N))
+        lossValid = tf.divide(lossValid, tf.to_double(2 * NValid))
         cond = tf.less(YHeadValid, tf.zeros(tf.shape(YHeadValid), dtype=tf.float64))
         neg1 = tf.constant([-1.], dtype=tf.float64)
         I = tf.ones(tf.shape(YHeadValid), dtype=tf.float64)
@@ -77,13 +81,38 @@ if __name__ == "__main__":
         accuracy = tf.where(cond, tf.ones(tf.shape(YHeadValid)), tf.zeros(tf.shape(YHeadValid)))
         accuracy = tf.to_double(tf.reduce_sum(accuracy)) / tf.to_double(tf.size(accuracy))
         accuracy , lossValid = sess.run([accuracy, lossValid], feed_dict={XValid:validData, YValid:validTarget})
-        print("With lamba=%f, MSE in validation set is %f" % (lda, lossValid))
-        print("With lamba=%f, classification accuracy is %f" % (lda, accuracy))
+        print("With lamba=%f, MSE in validation set: %f, classification accuracy in validation set: %f, computation time: %f seconds " % (lda, lossValid, accuracy, end-start))
         if (lossValid < min_lossValid):
             best_ldas = lda
             min_lossValid = lossValid
 
-        #####################
+    #####################
+    #part1.4
+    #normal equation:
+    #wLS = (XT*X)-1 * XT * Y
+    XTrain = tf.placeholder(tf.float64, [len(trainData), d])
+    YTrain = tf.placeholder(tf.float64, [len(trainData), 1])
+    XT = tf.transpose(XTrain)
+    wLS = tf.matrix_inverse(tf.matmul(XT, XTrain))
+    wLS = tf.matmul(wLS, XT)
+    wLS = tf.matmul(wLS, YTrain)
+    start = time.time()
+    sess.run(wLS, feed_dict={XTrain:trainData, YTrain:trainTarget})
+    end = time.time()
 
-        # print(sess.run(YTrain,{YTrain:trainTarget}))
+    YHeadNormalEq = tf.matmul(XValid, wLS)
+    lossNormalEq = tf.reduce_sum(tf.squared_difference(YHeadNormalEq, YValid))
+    NValid = len(validData)
+    lossNormalEq = tf.divide(lossNormalEq, tf.to_double(2 * NValid))
+    cond = tf.less(YHeadNormalEq, tf.zeros(tf.shape(YHeadNormalEq), dtype=tf.float64))
+    neg1 = tf.constant([-1.], dtype=tf.float64)
+    I = tf.ones(tf.shape(YHeadNormalEq), dtype=tf.float64)
+    neg1 = I*neg1
+    YHeadNormalEqClassifiedValid = tf.where(cond, neg1, tf.ones(tf.shape(YHeadNormalEq), dtype=tf.float64))
+    cond = tf.equal(YHeadNormalEqClassifiedValid, YValid)
+    accuracyNormalEq = tf.where(cond, tf.ones(tf.shape(YHeadNormalEq)), tf.zeros(tf.shape(YHeadNormalEq)))
+    accuracyNormalEq = tf.to_double(tf.reduce_sum(accuracyNormalEq)) / tf.to_double(tf.size(accuracyNormalEq))
+    accuracyNormalEq, lossNormalEq = sess.run([accuracyNormalEq, lossNormalEq], feed_dict={XValid:validData, YValid:validTarget, XTrain:trainData, YTrain:trainTarget})
+    print("Using the normal equation, MSE in validation set: %f, classification accuracy in validation set: %f, computation time: %f seconds " % (lossNormalEq, accuracyNormalEq, end-start))
+
 
