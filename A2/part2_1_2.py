@@ -47,9 +47,9 @@ if __name__ == "__main__":
     X = tf.placeholder(tf.float64, name="X")
     Y = tf.placeholder(tf.float64, name = "Y")
 
-    l = 0.01 #lambda
+    l = 0.0 #lambda
     iteration = 5000.
-    learnRate = [0.005, 0.001, 0.0001]
+    learnRate = [0.005]
     iterPerEpoch = int(N / batchSize)
     epochs = int(np.ceil(iteration/float(iterPerEpoch)))
     print("Number of epochs=",epochs)
@@ -60,8 +60,6 @@ if __name__ == "__main__":
     AccuracyT = []
     AccuracyV = []
     AccuracyTest = []
-    best_lr = learnRate[0]
-    minimumLossValid = 1000000.0
     for index, lr in enumerate(learnRate):
         w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.1, dtype=tf.float64), name="weights")
         b = tf.Variable(tf.truncated_normal([1], stddev=0.1, dtype=tf.float64), name="biases")
@@ -72,7 +70,7 @@ if __name__ == "__main__":
         loss_d = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=YTrain,logits=logits))
         loss_w = (l)*(tf.nn.l2_loss(w))
         loss = loss_d + loss_w
-        optimizer = tf.train.GradientDescentOptimizer(lr).minimize(loss)
+        optimizer = tf.train.AdamOptimizer(lr).minimize(loss)
 
         #Validation Cross Entropy Loss
         logitsValid = (tf.matmul(XValid,w) + b)
@@ -125,13 +123,13 @@ if __name__ == "__main__":
         plt.xlabel('the n-th epoch')
         plt.ylabel('loss/Accuracy')
         plt.title("MSE vs number of epoch for learning rate of %f" % lr)
-        fig.savefig("part2_1_learnrate_%d.png"%index)
+        fig.savefig("part2_1_2_learnrate_%d.png"%index)
         fig = plt.figure(index * 2 + 2)
         plt.scatter(range(100,epochs), TrainingLoss[100:], marker='.', )
         plt.xlabel('the n-th epoch')
         plt.ylabel('loss')
         plt.title("MSE vs number of epoch for learning rate of %f" % lr)
-        fig.savefig("part2_1_learnrate_%d_zoomedin.png" % index)
+        fig.savefig("part2_1_2_learnrate_%d_zoomedin.png" % index)
         
         #appending the losses and accuracies across epochs for training, validation and test
         Loss.append(TrainingLoss)
@@ -143,33 +141,21 @@ if __name__ == "__main__":
 
     print("Validation Loss")
     print("Learning rate 0.005",LossV[0][epochs-1])
-    print("Learning rate 0.001",LossV[1][epochs-1])
-    print("Learning rate 0.0001",LossV[2][epochs-1])
 
     print("Training Accuracy")
-    print("Lerning rate 0.005",AccuracyT[0][epochs-1])
-    print("Learning rate 0.001",AccuracyT[1][epochs-1])
-    print("Learning rate 0.0001",AccuracyT[2][epochs-1])
+    print("Learning rate 0.005",AccuracyT[0][epochs-1])
 
     print("Validation Accuracy")
-    print("Lerning rate 0.005",AccuracyV[0][epochs-1])
-    print("Learning rate 0.001",AccuracyV[1][epochs-1])
-    print("Learning rate 0.0001",AccuracyV[2][epochs-1])
+    print("Learning rate 0.005",AccuracyV[0][epochs-1])
    
     print("Test Accuracy")
-    print("Lerning rate 0.005",AccuracyTest[0][epochs-1])
-    print("Learning rate 0.001",AccuracyTest[1][epochs-1])
-    print("Learning rate 0.0001",AccuracyTest[2][epochs-1])
-
+    print("Learning rate 0.005",AccuracyTest[0][epochs-1])
+  
     #To Do: improve plots for all learning rates in one plot
-    fig2 = plt.figure(7)
+    fig2 = plt.figure(3)
     plt.xlabel('the n-th epoch')
     plt.ylabel('loss')
     plt.scatter(range(epochs), Loss[0],marker='*', c='r')
-    plt.scatter(range(epochs), Loss[1], marker='*', c='b')
-    plt.scatter(range(epochs), Loss[2],marker='*', c='g')
     plt.scatter(range(epochs), LossV[0],marker='.', c='r')
-    plt.scatter(range(epochs), LossV[1], marker='.', c='b')
-    plt.scatter(range(epochs), LossV[2],marker='.', c='g')
-    fig2.savefig("part2_1_all_learning_rates")
+    fig2.savefig("part2_1_2_all_learning_rates")
 
