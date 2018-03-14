@@ -49,7 +49,7 @@ if __name__ == "__main__":
     XTrain = tf.placeholder(tf.float64, [batchSize, d])
     YTrain = tf.placeholder(tf.float64, [batchSize, 1])
     for lda in ldas:
-        w = tf.Variable(tf.truncated_normal([d, 1], dtype=tf.float64), name="weights")
+        w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, seed=521, dtype=tf.float64), name="weights")
         b = tf.Variable(0.0, dtype=tf.float64, name="biases")
         YHead = tf.matmul(XTrain, w) + b
         loss = tf.reduce_sum(tf.squared_difference(YHead, YTrain))
@@ -91,16 +91,25 @@ if __name__ == "__main__":
     #normal equation:
     #wLS = (XT*X)-1 * XT * Y
     XTrain = tf.placeholder(tf.float64, [len(trainData), d])
+    shape = XTrain.get_shape()
+    shape = shape.as_list()
+    shape[-1] = 1
+    one = tf.ones(shape, dtype=tf.float64)
+    XExtended = tf.concat([one, XTrain], 1)
     YTrain = tf.placeholder(tf.float64, [len(trainData), 1])
-    XT = tf.transpose(XTrain)
-    wLS = tf.matrix_inverse(tf.matmul(XT, XTrain))
+    XT = tf.transpose(XExtended)
+    wLS = tf.matrix_inverse(tf.matmul(XT, XExtended))
     wLS = tf.matmul(wLS, XT)
     wLS = tf.matmul(wLS, YTrain)
     start = time.time()
     sess.run(wLS, feed_dict={XTrain:trainData, YTrain:trainTarget})
     end = time.time()
-
-    YHeadNormalEq = tf.matmul(XValid, wLS)
+    shape = XValid.get_shape()
+    shape = shape.as_list()
+    shape[-1] = 1
+    one = tf.ones(shape, dtype=tf.float64)
+    XValidExtended = tf.concat([one, XValid], 1)
+    YHeadNormalEq = tf.matmul(XValidExtended, wLS)
     lossNormalEq = tf.reduce_sum(tf.squared_difference(YHeadNormalEq, YValid))
     NValid = len(validData)
     lossNormalEq = tf.divide(lossNormalEq, tf.to_double(2 * NValid))
