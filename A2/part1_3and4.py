@@ -33,6 +33,7 @@ if __name__ == "__main__":
 
     XTest = tf.placeholder(tf.float64, testData.shape)
     YTest = tf.placeholder(tf.float64, testTarget.shape)
+    
     # part1.3
     batchSize = 500
     d = 784
@@ -110,11 +111,8 @@ if __name__ == "__main__":
     lossNormalEq = tf.reduce_sum(tf.squared_difference(YHeadNormalEq, YValid))
     NValid = len(validData)
     lossNormalEq = tf.divide(lossNormalEq, tf.to_double(2 * NValid))
-    cond = tf.less(YHeadNormalEq, tf.zeros(tf.shape(YHeadNormalEq), dtype=tf.float64))
-    neg1 = tf.constant([-1.], dtype=tf.float64)
-    I = tf.ones(tf.shape(YHeadNormalEq), dtype=tf.float64)
-    neg1 = I*neg1
-    YHeadNormalEqClassifiedValid = tf.where(cond, neg1, tf.ones(tf.shape(YHeadNormalEq), dtype=tf.float64))
+    cond = tf.less(YHeadNormalEq, tf.constant(0.5, shape=YHeadNormalEq.shape, dtype=tf.float64))
+    YHeadNormalEqClassifiedValid = tf.where(cond, tf.zeros(tf.shape(YHeadNormalEq), dtype=tf.float64), tf.ones(tf.shape(YHeadNormalEq), dtype=tf.float64))
     cond = tf.equal(YHeadNormalEqClassifiedValid, YValid)
     accuracyNormalEq = tf.where(cond, tf.ones(tf.shape(YHeadNormalEq)), tf.zeros(tf.shape(YHeadNormalEq)))
     accuracyNormalEq = tf.to_double(tf.reduce_sum(accuracyNormalEq)) / tf.to_double(tf.size(accuracyNormalEq))
