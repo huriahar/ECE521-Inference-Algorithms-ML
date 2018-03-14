@@ -37,7 +37,7 @@ if __name__ == "__main__":
     YTest = tf.placeholder(tf.int32, testTarget.shape)
     batchSize = 500
     d = 784
-    iteration = 20000.
+    iteration = 5000.
     learnRates = [0.005, 0.001, 0.0001]
     training_losses = [[] for i in range(len(learnRates))]
     valid_losses = [[] for i in range(len(learnRates))]

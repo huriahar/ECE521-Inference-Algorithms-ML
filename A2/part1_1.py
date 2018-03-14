@@ -57,8 +57,6 @@ if __name__ == "__main__":
     iterPerEpoch = int(N / batchSize)
     epochs = int(np.ceil(iteration/float(iterPerEpoch)))
     plt.close('all')
-    filewriter = tf.summary.FileWriter("graph", sess.graph)
-
     for index, lr in enumerate(learnRate):
         fig = plt.figure(index*2 + 1)
         optimizer = tf.train.GradientDescentOptimizer(lr).minimize(loss)
