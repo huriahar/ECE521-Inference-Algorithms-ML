@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 
 sess = tf.InteractiveSession()
 
-
 def loadData (fileName):
     with np.load(fileName) as data:
         Data, Target = data["images"], data["labels"]
@@ -36,26 +35,29 @@ if __name__ == "__main__":
 
     # part1.1
     batchSize = 500
-    d = 784
+    d = validData.shape[1]      # 28*28 pixels/image = 784
+    # Training and test data for each mini batch in each epoch
     XTrain = tf.placeholder(tf.float64, [batchSize, d])
     YTrain = tf.placeholder(tf.float64, [batchSize, 1])
 
     iteration = 20000.
     w = tf.Variable(tf.truncated_normal([d, 1], dtype=tf.float64), name="weights")
     b = tf.Variable(0.0, dtype=tf.float64, name="biases")
-    YHead = tf.matmul(XTrain,w) + b
-    N = len(trainData)
+    YHead = tf.matmul(XTrain,w) + b                     # (500, 1)
+    N = len(trainData)                                  # 3500
     loss = tf.reduce_sum(tf.squared_difference(YHead, YTrain))
     loss = tf.divide(loss,tf.to_double(2*N))
     regularizer = tf.nn.l2_loss(w)
-    lda = 0.0
+    lda = 0.0       # lambda
     loss = loss + lda * regularizer
+
     init = tf.global_variables_initializer()
     sess.run(init)
     learnRate = [0.005, 0.001, 0.0001]
-    iterPerEpoch = int(N / batchSize)
-    epochs = int(np.ceil(iteration/float(iterPerEpoch)))
+    iterPerEpoch = int(N / batchSize)                       # 7
+    epochs = int(np.ceil(iteration/float(iterPerEpoch)))    # 2858
     plt.close('all')
+
     for index, lr in enumerate(learnRate):
         fig = plt.figure(index*2 + 1)
         optimizer = tf.train.GradientDescentOptimizer(lr).minimize(loss)

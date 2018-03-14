@@ -5,7 +5,6 @@ import time
 
 sess = tf.InteractiveSession()
 
-
 def loadData(fileName):
     with np.load(fileName) as data:
         Data, Target = data["images"], data["labels"]
@@ -37,7 +36,7 @@ if __name__ == "__main__":
 
     # part1.2
     batchSizes = [500, 1500, 3500]
-    d = 784
+    d = validData.shape[1]      # 28*28 pixels/image = 784
     iteration = 20000.
     # chosen from part1.1
     learnRate = 0.005
@@ -45,8 +44,8 @@ if __name__ == "__main__":
     N = len(trainData)
     for batchSize in batchSizes:
         start = time.time()
-        iterPerEpoch = int(np.ceil(N / batchSize))
-        epochs = int(np.ceil(iteration / float(iterPerEpoch)))
+        iterPerEpoch = int(np.ceil(N / batchSize))                  # 7
+        epochs = int(np.ceil(iteration / float(iterPerEpoch)))      # 2858
         XTrain = tf.placeholder(tf.float64, [batchSize, d])
         YTrain = tf.placeholder(tf.float64, [batchSize, 1])
         w = tf.Variable(tf.truncated_normal([d, 1], dtype=tf.float64), name="weights")
@@ -70,7 +69,6 @@ if __name__ == "__main__":
                     YBatch = trainTarget[i * batchSize:(i + 1) * batchSize]
                 feed = {XTrain: XBatch, YTrain: YBatch}
                 _, L = sess.run([optimizer, loss], feed_dict=feed)
-                #print(batchSize, ep, i * batchSize, (i + 1) * batchSize)
         end = time.time()
 
         print("Batch size %d: loss=%f , took %f seconds to execute" % (batchSize, L, end-start))
