@@ -49,7 +49,7 @@ if __name__ == "__main__":
         epochs = int(np.ceil(iteration / float(iterPerEpoch)))
         XTrain = tf.placeholder(tf.float64, [batchSize, d])
         YTrain = tf.placeholder(tf.float64, [batchSize, 1])
-        w = tf.Variable(tf.truncated_normal([d, 1], dtype=tf.float64), name="weights")
+        w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, seed=521, dtype=tf.float64), name="weights")
         b = tf.Variable(0.0, dtype=tf.float64, name="biases")
         YHead = tf.matmul(XTrain, w) + b
         loss = tf.reduce_sum(tf.squared_difference(YHead, YTrain))

@@ -41,12 +41,13 @@ if __name__ == "__main__":
     YTrain = tf.placeholder(tf.float64, [batchSize, 1])
 
     iteration = 20000.
-    w = tf.Variable(tf.truncated_normal([d, 1], dtype=tf.float64), name="weights")
+    w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, seed=521, dtype=tf.float64), name="weights")
     b = tf.Variable(0.0, dtype=tf.float64, name="biases")
     YHead = tf.matmul(XTrain,w) + b
     N = len(trainData)
     loss = tf.reduce_sum(tf.squared_difference(YHead, YTrain))
     loss = tf.divide(loss,tf.to_double(2*N))
+    losses = []
     regularizer = tf.nn.l2_loss(w)
     lda = 0.0
     loss = loss + lda * regularizer
@@ -56,6 +57,8 @@ if __name__ == "__main__":
     iterPerEpoch = int(N / batchSize)
     epochs = int(np.ceil(iteration/float(iterPerEpoch)))
     plt.close('all')
+    filewriter = tf.summary.FileWriter("graph", sess.graph)
+
     for index, lr in enumerate(learnRate):
         fig = plt.figure(index*2 + 1)
         optimizer = tf.train.GradientDescentOptimizer(lr).minimize(loss)
@@ -66,23 +69,30 @@ if __name__ == "__main__":
                 YBatch = trainTarget[i*batchSize:(i+1)*batchSize]
                 feed = {XTrain:XBatch, YTrain:YBatch}
                 _,  L[ep] = sess.run([optimizer, loss], feed_dict=feed)
-
-        plt.scatter(range(epochs), L, marker='.',)
+        losses.append(L)
+        plt.scatter(range(epochs), L, marker='|')
         plt.xlabel('the n-th epoch')
         plt.ylabel('loss')
-        plt.title("MSE vs number of epoch for learning rate of %f" % lr)
+        plt.title("MSE vs number of epochs for learning rate of %f" % lr)
         fig.savefig("part1_1_learnrate_%d.png"%index)
         fig = plt.figure(index * 2 + 2)
-        plt.scatter(range(1500,epochs), L[1500:], marker='.', )
+        plt.scatter(range(1500,epochs), L[1500:], marker='|')
         plt.xlabel('the n-th epoch')
         plt.ylabel('loss')
-        plt.title("MSE vs number of epoch for learning rate of %f" % lr)
+        plt.title("MSE vs number of epochs for learning rate of %f" % lr)
         fig.savefig("part1_1_learnrate_%d_zoomedin.png" % index)
-        w = tf.Variable(tf.truncated_normal([d, 1], dtype=tf.float64), name="weights")
+        w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, seed=521, dtype=tf.float64), name="weights")
         b = tf.Variable(0.0, dtype=tf.float64, name="biases")
         sess.run(init)
 
     #####################
+    fig = plt.figure((index+1)*2 + 1)
+    plt.scatter(range(epochs), losses[0], marker='|', c='r', label='n = %f'%learnRate[0])
+    plt.scatter(range(epochs), losses[1], marker='|', c='g', label='n = %f'%learnRate[1])
+    plt.scatter(range(epochs), losses[2], marker='|', c='b', label='n = %f'%learnRate[2])
+    plt.legend()
+    plt.title("MSE vs number of epoch for different learning rates")
+    fig.savefig("part1_1_AllInOne.png")
 
     #print(sess.run(YTrain,{YTrain:trainTarget}))
 
