@@ -113,7 +113,7 @@ if __name__ == "__main__":
                 _,TrainingLoss[ep] = sess.run([optimizer,loss],feed_dict= {XTrain:XBatch,YTrain:YBatch})
             ValidLoss[ep] = sess.run(lossValid,feed_dict={XValid:validData, YValid:validTarget})
             TestLoss[ep] = sess.run(lossTest, feed_dict={XTest:testData,YTest:testTarget})
-            TrainingAccuracy[ep]= sess.run(accuracy,feed_dict={X:XBatch, Y:YBatch})
+            TrainingAccuracy[ep]= sess.run(accuracy,feed_dict={X:trainData, Y:trainTarget})
             ValidAccuracy[ep]= sess.run(accuracy,feed_dict={X:validData, Y:validTarget})
             TestAccuracy[ep]= sess.run(accuracy,feed_dict={X:testData, Y:testTarget})
 
@@ -145,6 +145,11 @@ if __name__ == "__main__":
     print("Learning rate 0.005",LossV[0][epochs-1])
     print("Learning rate 0.001",LossV[1][epochs-1])
     print("Learning rate 0.0001",LossV[2][epochs-1])
+
+    print("Training Accuracy")
+    print("Lerning rate 0.005",AccuracyT[0][epochs-1])
+    print("Learning rate 0.001",AccuracyT[1][epochs-1])
+    print("Learning rate 0.0001",AccuracyT[2][epochs-1])
 
     print("Validation Accuracy")
     print("Lerning rate 0.005",AccuracyV[0][epochs-1])
