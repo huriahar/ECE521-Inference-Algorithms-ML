@@ -5,7 +5,6 @@ import time
 
 sess = tf.InteractiveSession()
 
-
 def loadData(fileName):
     with np.load(fileName) as data:
         Data, Target = data["images"], data["labels"]
@@ -28,15 +27,10 @@ def loadData(fileName):
 
 if __name__ == "__main__":
     trainData, trainTarget, validData, validTarget, testData, testTarget = loadData("notMNIST.npz")
-    XValid = tf.placeholder(tf.float64, validData.shape)
-    YValid = tf.placeholder(tf.float64, validTarget.shape)
 
-    XTest = tf.placeholder(tf.float64, testData.shape)
-    YTest = tf.placeholder(tf.float64, testTarget.shape)
-    
     # part1.3
     batchSize = 500
-    d = validData.shape[1]      # 28*28 pixels/image = 784
+    d = trainData.shape[1]      # 28*28 pixels/image = 784
     iteration = 20000.
     # chosen from part1.1
     learnRate = 0.005
@@ -47,8 +41,16 @@ if __name__ == "__main__":
     NValid = len(validData)
     iterPerEpoch = int(N / batchSize)                       # 7
     epochs = int(np.ceil(iteration / float(iterPerEpoch)))  # 2858
+
     XTrain = tf.placeholder(tf.float64, [batchSize, d])
     YTrain = tf.placeholder(tf.float64, [batchSize, 1])
+
+    XValid = tf.placeholder(tf.float64, validData.shape)
+    YValid = tf.placeholder(tf.float64, validTarget.shape)
+
+    XTest = tf.placeholder(tf.float64, testData.shape)
+    YTest = tf.placeholder(tf.float64, testTarget.shape)
+    
     for lda in ldas:
         w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, seed=521, dtype=tf.float64), name="weights")
         b = tf.Variable(0.0, dtype=tf.float64, name="biases")
@@ -79,7 +81,7 @@ if __name__ == "__main__":
         tf.local_variables_initializer().run()
         _ , o, lossValid = sess.run([accuracy, update_op, lossValid], feed_dict={XValid:validData, YValid:validTarget})
         accuracy = sess.run(accuracy)
-        print("With lamba=%f, MSE in validation set: %f, classification accuracy in validation set: %f, computation time: %f seconds " % (lda, lossValid, accuracy, end-start))
+        print("With lambda=%f, MSE in validation set: %f, classification accuracy in validation set: %f, computation time: %f seconds " % (lda, lossValid, accuracy, end-start))
         if (lossValid < min_lossValid):
             best_ldas = lda
             min_lossValid = lossValid

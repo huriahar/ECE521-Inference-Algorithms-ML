@@ -27,29 +27,31 @@ def loadData (fileName):
 
 if __name__ == "__main__":
     trainData, trainTarget, validData, validTarget, testData, testTarget = loadData("notMNIST.npz")
+
+    # part1.1
+    batchSize = 500
+    d = trainData.shape[1]      # 28*28 pixels/image = 784
+
+    # Training and test data for each mini batch in each epoch
+    XTrain = tf.placeholder(tf.float64, [batchSize, d])
+    YTrain = tf.placeholder(tf.float64, [batchSize, 1])
+
     XValid = tf.placeholder(tf.float64, validData.shape)
     YValid = tf.placeholder(tf.float64, validTarget.shape)
 
     XTest = tf.placeholder(tf.float64, testData.shape)
     YTest = tf.placeholder(tf.float64, testTarget.shape)
 
-    # part1.1
-    batchSize = 500
-    d = validData.shape[1]      # 28*28 pixels/image = 784
-    # Training and test data for each mini batch in each epoch
-    XTrain = tf.placeholder(tf.float64, [batchSize, d])
-    YTrain = tf.placeholder(tf.float64, [batchSize, 1])
-
     iteration = 20000.
-    w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, seed=521, dtype=tf.float64), name="weights")
+    w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, dtype=tf.float64), name="weights")
     b = tf.Variable(0.0, dtype=tf.float64, name="biases")
-    YHead = tf.matmul(XTrain,w) + b                     # (500, 1)
-    N = len(trainData)                                  # 3500
+    YHead = tf.matmul(XTrain, w) + b                     # (500, 1)
+    N = len(trainData)                                   # 3500
     loss = tf.reduce_sum(tf.squared_difference(YHead, YTrain))
     loss = tf.divide(loss,tf.to_double(2*N))
     losses = []
     regularizer = tf.nn.l2_loss(w)
-    lda = 0.0       # lambda
+    lda = 0.0       # lambda i.e. weight decay coefficient
     loss = loss + lda * regularizer
 
     init = tf.global_variables_initializer()
@@ -69,6 +71,8 @@ if __name__ == "__main__":
                 YBatch = trainTarget[i*batchSize:(i+1)*batchSize]
                 feed = {XTrain:XBatch, YTrain:YBatch}
                 _,  L[ep] = sess.run([optimizer, loss], feed_dict=feed)
+
+        print("Minimum loss for learning rate", lr, "is:", min(L))
         losses.append(L)
         plt.scatter(range(epochs), L, marker='|')
         plt.xlabel('the n-th epoch')

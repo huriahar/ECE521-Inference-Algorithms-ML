@@ -25,30 +25,32 @@ def loadData(fileName):
         testData, testTarget = Data[3600:], Target[3600:]
         return trainData, trainTarget, validData, validTarget, testData, testTarget
 
-
 if __name__ == "__main__":
     trainData, trainTarget, validData, validTarget, testData, testTarget = loadData("notMNIST.npz")
+
+    # part1.2
+    batchSizes = [500, 1500, 3500]
+    d = trainData.shape[1]      # 28*28 pixels/image = 784
+    iteration = 20000.
+    # chosen from part1.1
+    learnRate = 0.005
+    lda = 0.0
+    N = len(trainData)
+
     XValid = tf.placeholder(tf.float64, validData.shape)
     YValid = tf.placeholder(tf.float64, validTarget.shape)
 
     XTest = tf.placeholder(tf.float64, testData.shape)
     YTest = tf.placeholder(tf.float64, testTarget.shape)
 
-    # part1.2
-    batchSizes = [500, 1500, 3500]
-    d = validData.shape[1]      # 28*28 pixels/image = 784
-    iteration = 20000.
-    # chosen from part1.1
-    learnRate = 0.005
-    lda = 0.0
-    N = len(trainData)
     for batchSize in batchSizes:
         start = time.time()
-        iterPerEpoch = int(np.ceil(N / batchSize))                  # 7
-        epochs = int(np.ceil(iteration / float(iterPerEpoch)))      # 2858
         XTrain = tf.placeholder(tf.float64, [batchSize, d])
         YTrain = tf.placeholder(tf.float64, [batchSize, 1])
-        w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, seed=521, dtype=tf.float64), name="weights")
+        iterPerEpoch = int(np.ceil(N / batchSize))
+        epochs = int(np.ceil(iteration / float(iterPerEpoch)))
+
+        w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, dtype=tf.float64), name="weights")
         b = tf.Variable(0.0, dtype=tf.float64, name="biases")
         YHead = tf.matmul(XTrain, w) + b
         loss = tf.reduce_sum(tf.squared_difference(YHead, YTrain))
