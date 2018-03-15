@@ -105,7 +105,9 @@ if __name__ == "__main__":
     best_lr = learnRate[0]
     bestLrIndex = 0
     minimumTrainingLoss= float('inf')
+
     for index,lr in enumerate(learnRate):
+        print(Loss[index][-1], lr)
         if(Loss[index][-1] <minimumTrainingLoss):
             minimumTrainingLoss = Loss[index][-1]
             best_lr = learnRate[index]
@@ -152,5 +154,5 @@ if __name__ == "__main__":
     print("Best Learning Rate: %f" % learnRate[bestLrIndex])
     print("Classification accuracy on training data: %f" % TrainingAccuracy[-1])
     print("Classification accuracy on validation data: %f" % ValidAccuracy[-1])
-  
+    print("Classification accuracy on test data: %f" % TestAccuracy[-1])
 
