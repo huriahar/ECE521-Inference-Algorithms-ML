@@ -47,7 +47,7 @@ if __name__ == "__main__":
         start = time.time()
         XTrain = tf.placeholder(tf.float64, [batchSize, d])
         YTrain = tf.placeholder(tf.float64, [batchSize, 1])
-        iterPerEpoch = int(np.ceil(N / batchSize))
+        iterPerEpoch = int(np.ceil(float(N) / batchSize))
         epochs = int(np.ceil(iteration / float(iterPerEpoch)))
 
         w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, dtype=tf.float64), name="weights")
