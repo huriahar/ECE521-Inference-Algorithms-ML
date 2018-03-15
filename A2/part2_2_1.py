@@ -96,7 +96,8 @@ if __name__ == "__main__":
             Y_expanded = tf.expand_dims(YValid, -1)
             validation_accuracy, validation_update_op = tf.metrics.accuracy(labels=Y_expanded, predictions=classifications)
             tf.local_variables_initializer().run()
-            vL, vA = sess.run([validation_loss, validation_accuracy], feed_dict={XValid: validData, YValid: validTarget})
+            vL, _, _u = sess.run([validation_loss, validation_accuracy, validation_update_op], feed_dict={XValid: validData, YValid: validTarget})
+            vA = sess.run(validation_accuracy)
             valid_losses[idx].append(vL)
             valid_accuracies[idx].append(vA)
         if valid_losses[idx][-1] < min_lossValid:
