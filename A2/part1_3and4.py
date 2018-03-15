@@ -36,17 +36,17 @@ if __name__ == "__main__":
     
     # part1.3
     batchSize = 500
-    d = 784
+    d = validData.shape[1]      # 28*28 pixels/image = 784
     iteration = 20000.
     # chosen from part1.1
     learnRate = 0.005
-    ldas = [0., 0.001, 0.1, 1]
+    ldas = [0., 0.001, 0.1, 1.]
     best_ldas = ldas[0]
-    min_lossValid = 1000000.0
+    min_lossValid = float('inf')
     N = len(trainData)
     NValid = len(validData)
-    iterPerEpoch = int(N / batchSize)
-    epochs = int(np.ceil(iteration / float(iterPerEpoch)))
+    iterPerEpoch = int(N / batchSize)                       # 7
+    epochs = int(np.ceil(iteration / float(iterPerEpoch)))  # 2858
     XTrain = tf.placeholder(tf.float64, [batchSize, d])
     YTrain = tf.placeholder(tf.float64, [batchSize, 1])
     for lda in ldas:
@@ -83,6 +83,8 @@ if __name__ == "__main__":
         if (lossValid < min_lossValid):
             best_ldas = lda
             min_lossValid = lossValid
+
+    # TODO: Add test accurcy part
 
     #####################
     #part1.4
