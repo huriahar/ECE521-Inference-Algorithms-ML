@@ -72,7 +72,7 @@ if __name__ == "__main__":
     YTest = tf.placeholder(tf.int32, testTarget.shape)
     
     for lda in ldas:
-        w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, seed=521, dtype=tf.float64), name="weights")
+        w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, dtype=tf.float64), name="weights")
         b = tf.Variable(0.0, dtype=tf.float64, name="biases")
         loss = calculateMSELoss(XTrain, YTrain, w, b, lda)
         init = tf.global_variables_initializer()

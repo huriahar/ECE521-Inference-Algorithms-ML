@@ -67,7 +67,7 @@ if __name__ == "__main__":
     YTest = tf.placeholder(tf.int32, testTarget.shape)
 
     for idx, learnRate in enumerate(learnRates):
-        w = tf.Variable(tf.truncated_normal([d, numClass], stddev=0.5, seed=521, dtype=tf.float64), name="weights")
+        w = tf.Variable(tf.truncated_normal([d, numClass], stddev=0.5, dtype=tf.float64), name="weights")
         b = tf.Variable(tf.zeros([numClass], dtype=tf.float64, name="biases"))
         trainingLoss = [None for ep in range(epochs)]
         Weights = [None for ep in range(epochs)]
@@ -112,7 +112,6 @@ if __name__ == "__main__":
         Pi = tf.nn.softmax(logits)
         value, classifications = tf.nn.top_k(Pi)
         YExpanded = tf.expand_dims(YTrainAll, -1)
-        #l, p, c, y = sess.run([logits, Pi, classifications, Y_expanded], feed_dict={XTrainAll: trainData, YTrainAll: trainTarget})
         accuracy, updateOp = tf.metrics.accuracy(labels=YExpanded, predictions=classifications)
         tf.local_variables_initializer().run()
         _, updateOpTrain = sess.run([accuracy, updateOp], feed_dict={XTrainAll:trainData, YTrainAll:trainTarget})
