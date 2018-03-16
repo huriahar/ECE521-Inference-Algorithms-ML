@@ -27,46 +27,46 @@ def loadData(fileName):
         testData, testTarget = Data[3600:], Target[3600:]
         return trainData, trainTarget, validData, validTarget, testData, testTarget
 
-def calculateCrossEntropyLoss(x,y,weights,bias,lambdaParam):
-    logits = (tf.matmul(x,weights) + bias)
-    loss_d = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y,logits=logits))
-    loss_w = (lambdaParam)*(tf.nn.l2_loss(weights))
+def calculateCrossEntropyLoss(x, y, weights, bias, lambdaParam):
+    logits = tf.matmul(x,weights) + bias
+    loss_d = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=logits))
+    loss_w = lambdaParam*tf.nn.l2_loss(weights)
     crossEntropyLoss = loss_d + loss_w
     return crossEntropyLoss
 
-def calculateClassificationAccuracy(x,y,weights,bias):
-    YPred = tf.sigmoid((tf.matmul(x,weights)+bias))
+def calculateClassificationAccuracy(x, y, weights, bias):
+    YPred = tf.sigmoid(tf.matmul(x,weights) + bias)
     YClassfication = tf.cast(tf.greater(YPred , 0.5), tf.float64)
-    YCorrect = tf.cast(tf.equal(YClassfication, y),tf.float64)
+    YCorrect = tf.cast(tf.equal(YClassfication, y), tf.float64)
     accuracy = tf.reduce_mean(tf.cast(YCorrect,tf.float64))*100
     return accuracy
 
 if __name__ == "__main__":
     trainData, trainTarget, validData, validTarget, testData, testTarget = loadData("notMNIST.npz")
+
+    batchSize = 500
+    d = trainData.shape[1]                                  # 28*28 = 784
+    N = len(trainData)                                      # 3500
+
+    XTrain = tf.placeholder(tf.float64, [batchSize, d])
+    YTrain = tf.placeholder(tf.float64, [batchSize, 1])
+
     XValid = tf.placeholder(tf.float64, validData.shape)
     YValid = tf.placeholder(tf.float64, validTarget.shape)
 
     XTest = tf.placeholder(tf.float64, testData.shape)
     YTest = tf.placeholder(tf.float64, testTarget.shape)
 
-    batchSize = 500
-    d = 784
-    N = len(trainData)
-
-
-    XTrain = tf.placeholder(tf.float64, [batchSize, d])
-    YTrain = tf.placeholder(tf.float64, [batchSize, 1])
-
     X = tf.placeholder(tf.float64, name="X")
     Y = tf.placeholder(tf.float64, name = "Y")
 
-    l = 0.01 #lambda
+    l = 0.01                                                #lambda
     iteration = 5000.
     learnRate = 0.001
-    iterPerEpoch = int(N / batchSize)
-    epochs = int(np.ceil(iteration/float(iterPerEpoch)))
-    print("Number of epochs=",epochs)
+    iterPerEpoch = int(N / batchSize)                       # 7
+    epochs = int(np.ceil(iteration/float(iterPerEpoch)))    # 784
     plt.close('all')
+
     Loss = []
     LossV = []
     LossTest=[]
@@ -89,21 +89,21 @@ if __name__ == "__main__":
     TestLossAdam= [None for ep in range(epochs)]
     TestAccuracyAdam = [None for ep in range(epochs)]
 
-    wSGD = tf.Variable(tf.truncated_normal([d, 1], stddev=0.1, dtype=tf.float64), name="weights")
-    bSGD = tf.Variable(tf.truncated_normal([1], stddev=0.1, dtype=tf.float64), name="biases")
+    wSGD = tf.Variable(tf.truncated_normal([d, 1], stddev=0.1, seed=521, dtype=tf.float64), name="weights")
+    bSGD = tf.Variable(tf.truncated_normal([1], stddev=0.1, seed=521, dtype=tf.float64), name="biases")
 
-    wAD = tf.Variable(tf.truncated_normal([d, 1], stddev=0.1, dtype=tf.float64), name="weights")
-    bAD = tf.Variable(tf.truncated_normal([1], stddev=0.1, dtype=tf.float64), name="biases")
+    wAD = tf.Variable(tf.truncated_normal([d, 1], stddev=0.1, seed=521, dtype=tf.float64), name="weights")
+    bAD = tf.Variable(tf.truncated_normal([1], stddev=0.1, seed=521, dtype=tf.float64), name="biases")
    
 
-    lossSGD = calculateCrossEntropyLoss(XTrain,YTrain,wSGD,bSGD,l)
+    lossSGD = calculateCrossEntropyLoss(XTrain, YTrain, wSGD, bSGD, l)
     optimizerSGD = tf.train.GradientDescentOptimizer(learnRate).minimize(lossSGD)
 
-    lossAD = calculateCrossEntropyLoss(XTrain,YTrain,wAD,bAD,l)
+    lossAD = calculateCrossEntropyLoss(XTrain, YTrain, wAD, bAD, l)
     optimizerAD = tf.train.AdamOptimizer(learnRate).minimize(lossAD)
 
-    lossSGDValid = calculateCrossEntropyLoss(XValid,YValid,wSGD,bSGD,l)
-    lossSGDTest = calculateCrossEntropyLoss(XTest,YTest,wSGD,bSGD,l)
+    lossSGDValid = calculateCrossEntropyLoss(XValid, YValid, wSGD, bSGD, l)
+    lossSGDTest = calculateCrossEntropyLoss(XTest, YTest, wSGD, bSGD, l)
 
     lossAdamValid = calculateCrossEntropyLoss(XValid,YValid,wAD,bAD,l)
     lossAdamTest = calculateCrossEntropyLoss(XTest,YTest,wAD,bAD,l)
@@ -139,12 +139,12 @@ if __name__ == "__main__":
         TestAccuracyAdam[ep]= sess.run(accuracyAdam,feed_dict={X:testData, Y:testTarget})
 
     # To Do: improve plots!!!!!!!
-    plt.scatter(range(epochs), TrainingLossSGD, marker='.', c= 'r', label ="SGD")
-    plt.scatter(range(epochs), TrainingLossAdam, marker='*', c= 'b', label = "Adam")
+    plt.plot(range(epochs), TrainingLossSGD, c= 'r', label ="SGD")
+    plt.plot(range(epochs), TrainingLossAdam, c= 'b', label = "Adam")
     plt.legend()
     plt.xlabel('the n-th epoch')
-    plt.ylabel('loss/Accuracy')
-    plt.title("MSE vs number of epoch for learning rate of %f" % learnRate)
+    plt.ylabel('Training cross-entropy loss')
+    plt.title("Training cross-entropy loss vs number of epochs for learning rate %f" % learnRate)
     fig.savefig("part2_1_2_learnrate.png")
 
     

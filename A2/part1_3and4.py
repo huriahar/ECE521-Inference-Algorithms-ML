@@ -27,7 +27,7 @@ def loadData(fileName):
 
 def calculateMSELoss(X, Y, w, b, lda):
     YHead = tf.matmul(X, w) + b
-    loss = tf.reduce_sum(tf.squared_difference(YHead, Y))
+    loss = tf.reduce_sum(tf.squared_difference(YHead, tf.cast(Y, tf.float64)))
     N = X.get_shape().as_list()[0]
     loss = tf.divide(loss, tf.to_double(2*N))
     regularizer = tf.nn.l2_loss(w)
@@ -63,13 +63,13 @@ if __name__ == "__main__":
     bestWeight = bestBias = None
 
     XTrain = tf.placeholder(tf.float64, [batchSize, d])
-    YTrain = tf.placeholder(tf.float64, [batchSize, 1])
+    YTrain = tf.placeholder(tf.int32, [batchSize, 1])
 
     XValid = tf.placeholder(tf.float64, validData.shape)
-    YValid = tf.placeholder(tf.float64, validTarget.shape)
+    YValid = tf.placeholder(tf.int32, validTarget.shape)
 
     XTest = tf.placeholder(tf.float64, testData.shape)
-    YTest = tf.placeholder(tf.float64, testTarget.shape)
+    YTest = tf.placeholder(tf.int32, testTarget.shape)
     
     for lda in ldas:
         w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, seed=521, dtype=tf.float64), name="weights")
@@ -88,6 +88,7 @@ if __name__ == "__main__":
                 feed = {XTrain: XBatch, YTrain: YBatch}
                 _, L[ep] = sess.run([optimizer, loss], feed_dict=feed)
         end = time.time()
+        print("Lda:", lda, "training mse:", L[-1])
         validLoss = calculateMSELoss(XValid, YValid, w, b, lda)
         accuracy, updateOp = calculateAccuracy(XValid, YValid, w, b)
         tf.local_variables_initializer().run()
@@ -131,13 +132,14 @@ if __name__ == "__main__":
     shape[-1] = 1
     one = tf.ones(shape, dtype=tf.float64)
     XValidExtended = tf.concat([one, XValid], 1)
+    YValid = tf.placeholder(tf.int32, [len(validData), 1])
     YHeadNormalEq = tf.matmul(XValidExtended, wLS)
-    lossNormalEq = tf.reduce_sum(tf.squared_difference(YHeadNormalEq, YValid))
+    lossNormalEq = tf.reduce_sum(tf.squared_difference(YHeadNormalEq, tf.cast(YValid, tf.float64)))
     NValid = len(validData)
     lossNormalEq = tf.divide(lossNormalEq, tf.to_double(2 * NValid))
     cond = tf.less(YHeadNormalEq, tf.constant(0.5, shape=YHeadNormalEq.shape, dtype=tf.float64))
     YHeadNormalEqClassifiedValid = tf.where(cond, tf.zeros(tf.shape(YHeadNormalEq), dtype=tf.float64), tf.ones(tf.shape(YHeadNormalEq), dtype=tf.float64))
-    cond = tf.equal(YHeadNormalEqClassifiedValid, YValid)
+    cond = tf.equal(YHeadNormalEqClassifiedValid, tf.cast(YValid, tf.float64))
     accuracyNormalEq = tf.where(cond, tf.ones(tf.shape(YHeadNormalEq)), tf.zeros(tf.shape(YHeadNormalEq)))
     accuracyNormalEq = tf.to_double(tf.reduce_sum(accuracyNormalEq)) / tf.to_double(tf.size(accuracyNormalEq))
     accuracyNormalEq, lossNormalEq = sess.run([accuracyNormalEq, lossNormalEq], feed_dict={XValid:validData, YValid:validTarget, XTrain:trainData, YTrain:trainTarget})
