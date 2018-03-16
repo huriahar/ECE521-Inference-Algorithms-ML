@@ -25,6 +25,15 @@ def loadData(fileName):
         testData, testTarget = Data[3600:], Target[3600:]
         return trainData, trainTarget, validData, validTarget, testData, testTarget
 
+def calculateMSELoss(X, Y, w, b, lda):
+    YHead = tf.matmul(X, w) + b
+    loss = tf.reduce_sum(tf.squared_difference(YHead, Y))
+    N = X.get_shape().as_list()[0]
+    loss = tf.divide(loss, tf.to_double(2*N))
+    regularizer = tf.nn.l2_loss(w)
+    loss = loss + lda*regularizer
+    return loss
+
 if __name__ == "__main__":
     trainData, trainTarget, validData, validTarget, testData, testTarget = loadData("notMNIST.npz")
 
@@ -35,7 +44,7 @@ if __name__ == "__main__":
     # chosen from part1.1
     learnRate = 0.005
     lda = 0.0
-    N = len(trainData)
+    N = len(trainData)              # 3500
 
     XValid = tf.placeholder(tf.float64, validData.shape)
     YValid = tf.placeholder(tf.float64, validTarget.shape)
@@ -50,13 +59,9 @@ if __name__ == "__main__":
         iterPerEpoch = int(np.ceil(float(N) / batchSize))
         epochs = int(np.ceil(iteration / float(iterPerEpoch)))
 
-        w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, dtype=tf.float64), name="weights")
+        w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, seed=521, dtype=tf.float64), name="weights")
         b = tf.Variable(0.0, dtype=tf.float64, name="biases")
-        YHead = tf.matmul(XTrain, w) + b
-        loss = tf.reduce_sum(tf.squared_difference(YHead, YTrain))
-        loss = tf.divide(loss, tf.to_double(2 * N))
-        regularizer = tf.nn.l2_loss(w)
-        loss = loss + lda * regularizer
+        loss = calculateMSELoss(XTrain, YTrain, w, b, lda)
         init = tf.global_variables_initializer()
         sess.run(init)
         optimizer = tf.train.GradientDescentOptimizer(learnRate).minimize(loss)

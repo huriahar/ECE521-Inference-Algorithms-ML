@@ -23,7 +23,16 @@ def loadData (fileName):
         trainData, trainTarget = Data[:3500], Target[:3500]
         validData, validTarget = Data[3500:3600], Target[3500:3600]
         testData, testTarget = Data[3600:], Target[3600:]
-        return trainData, trainTarget, validData, validTarget, testData, testTarget    
+        return trainData, trainTarget, validData, validTarget, testData, testTarget
+
+def calculateMSELoss(X, Y, w, b, lda):
+    YHead = tf.matmul(X, w) + b
+    loss = tf.reduce_sum(tf.squared_difference(YHead, Y))
+    N = X.get_shape().as_list()[0]
+    loss = tf.divide(loss, tf.to_double(2*N))
+    regularizer = tf.nn.l2_loss(w)
+    loss = loss + lda*regularizer
+    return loss
 
 if __name__ == "__main__":
     trainData, trainTarget, validData, validTarget, testData, testTarget = loadData("notMNIST.npz")
@@ -43,17 +52,15 @@ if __name__ == "__main__":
     YTest = tf.placeholder(tf.float64, testTarget.shape)
 
     iteration = 20000.
-    w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, dtype=tf.float64), name="weights")
+    w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, seed=521, dtype=tf.float64), name="weights")
     b = tf.Variable(0.0, dtype=tf.float64, name="biases")
-    YHead = tf.matmul(XTrain, w) + b                     # (500, 1)
-    N = len(trainData)                                   # 3500
-    loss = tf.reduce_sum(tf.squared_difference(YHead, YTrain))
-    loss = tf.divide(loss,tf.to_double(2*N))
-    losses = []
-    regularizer = tf.nn.l2_loss(w)
-    lda = 0.0       # lambda i.e. weight decay coefficient
-    loss = loss + lda * regularizer
 
+    lda = 0.0       # lambda i.e. weight decay coefficient
+    loss = calculateMSELoss(XTrain, YTrain, w, b, lda)
+
+    N = len(trainData)                                   # 3500
+    losses = []
+    
     init = tf.global_variables_initializer()
     sess.run(init)
     learnRate = [0.005, 0.001, 0.0001]
@@ -72,7 +79,7 @@ if __name__ == "__main__":
                 feed = {XTrain:XBatch, YTrain:YBatch}
                 _,  L[ep] = sess.run([optimizer, loss], feed_dict=feed)
 
-        print("Minimum loss for learning rate", lr, "is:", min(L))
+        print("Minimum loss for learning rate", lr, "is:", L[-1])
         losses.append(L)
         plt.scatter(range(epochs), L, marker='|')
         plt.xlabel('the n-th epoch')
@@ -91,11 +98,13 @@ if __name__ == "__main__":
 
     #####################
     fig = plt.figure((index+1)*2 + 1)
-    plt.scatter(range(epochs), losses[0], marker='|', c='r', label='n = %f'%learnRate[0])
-    plt.scatter(range(epochs), losses[1], marker='|', c='g', label='n = %f'%learnRate[1])
-    plt.scatter(range(epochs), losses[2], marker='|', c='b', label='n = %f'%learnRate[2])
+    plt.plot(range(epochs), losses[0], c='r', label='n = %f'%learnRate[0])
+    plt.plot(range(epochs), losses[1], c='g', label='n = %f'%learnRate[1])
+    plt.plot(range(epochs), losses[2], c='b', label='n = %f'%learnRate[2])
     plt.legend()
-    plt.title("MSE vs number of epoch for different learning rates")
+    plt.title("MSE vs number of epochs for different learning rates")
+    plt.xlabel("Number of epochs")
+    plt.ylabel("Men Squared Error")
     fig.savefig("part1_1_AllInOne.png")
 
     #print(sess.run(YTrain,{YTrain:trainTarget}))
