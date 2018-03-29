@@ -38,14 +38,6 @@ def calculateCrossEntropyLoss(X, Y, w, b, lda, numClass):
     loss = loss + lda * regularizer
     return loss
 
-def calculateClassificationAccuracy(X, Y, w, b):
-    logits = tf.matmul(X, w) + b
-    Pi = tf.nn.softmax(logits)
-    value, classifications = tf.nn.top_k(Pi)
-    YExpanded = tf.expand_dims(Y, -1)
-    accuracy, updateOp = tf.metrics.accuracy(labels=YExpanded, predictions=classifications)
-    return accuracy, updateOp
-
 if __name__ == "__main__":
     trainData, validData, testData, trainTarget, validTarget, testTarget = loadData('data.npy','target.npy')
 
@@ -79,7 +71,7 @@ if __name__ == "__main__":
     # using the best accuracy for validation set
     for lrIdx, learningRate in enumerate(learnRates):
         for ldaIdx, lda in enumerate(ldas):
-            w = tf.Variable(tf.truncated_normal([d, numClass], stddev=0.5, seed=521, dtype=tf.float64), name="weights")
+            w = tf.Variable(tf.truncated_normal([d, numClass], stddev=0.5, dtype=tf.float64), name="weights")
             b = tf.Variable(tf.zeros([numClass], dtype=tf.float64, name="biases"))
             loss = calculateCrossEntropyLoss(XTrain, YTrain, w, b, lda, numClass)
             optimizer = tf.train.AdamOptimizer(learningRate).minimize(loss)
@@ -103,10 +95,13 @@ if __name__ == "__main__":
                 trainingLoss[ep], Weights[ep], Biases[ep] = sess.run([loss, w, b], feed_dict={XTrain: XBatch, YTrain: YBatch})
 
             # After finishing training, find the validation accuracy
-            accuracy, updateOp = calculateClassificationAccuracy(XValid, YValid, Weights[-1], Biases[-1])
-            tf.local_variables_initializer().run()
-            _, updateOp = sess.run([accuracy, updateOp], feed_dict={XValid:validData, YValid:validTarget})
-            validAccuracy = sess.run(accuracy)
+            logits = tf.matmul(XValid, Weights[-1]) + Biases[-1]
+            Pi = tf.nn.softmax(logits)
+            x = sess.run(YValid, feed_dict={YValid:validTarget})
+            y = sess.run(tf.argmax(Pi, 1), feed_dict={XValid:validData})
+            correct_predictions = sum(1 for i,j in zip(x, y) if i == j)
+            validAccuracy = correct_predictions*100.0/len(x)
+
             print("Learning rate:", learningRate, "Lda:", lda, "trainingLoss:", trainingLoss[-1], "validAccuracy:", validAccuracy)
             if (validAccuracy > maxValidAccuracy):
                 maxValidAccuracy = validAccuracy
@@ -115,12 +110,11 @@ if __name__ == "__main__":
                 Loss = copy.deepcopy(trainingLoss)
                 bestWeight = copy.deepcopy(Weights)
                 bestBias = copy.deepcopy(Biases)
-    print("Best learning rate:", learnRates[bestLearningRateIdx], "Best lda:", ldas[bestLdaIdx], "Best validation accuracy:", maxValidAccuracy)
     
+    print("Best learning rate:", learnRates[bestLearningRateIdx], "Best lda:", ldas[bestLdaIdx], "Best validation accuracy:", maxValidAccuracy)
     trainingAccuracy = [None for ep in range(epochs)]
     validationLoss = [None for ep in range(epochs)]
     validationAccuracy = [None for ep in range(epochs)]
-
     XTrainAll = tf.placeholder(tf.float64, [N, d], name="X")
     YTrainAll = tf.placeholder(tf.int32, [N], name = "Y")
 
@@ -131,28 +125,29 @@ if __name__ == "__main__":
 
         logits = tf.matmul(XTrainAll, weightEp) + biasEp
         Pi = tf.nn.softmax(logits)
-        value, classifications = tf.nn.top_k(Pi)
-        YExpanded = tf.expand_dims(YTrainAll, -1)
-        accuracy, updateOp = tf.metrics.accuracy(labels=YExpanded, predictions=classifications)
-        tf.local_variables_initializer().run()
-        _, updateOpTrain = sess.run([accuracy, updateOp], feed_dict={XTrainAll:trainData, YTrainAll:trainTarget})
-        trainingAccuracy[ep] = sess.run(accuracy)
+        x = sess.run(YTrainAll, feed_dict={YTrainAll:trainTarget})
+        y = sess.run(tf.argmax(Pi, 1), feed_dict={XTrainAll:trainData})
+        correct_predictions = sum(1 for i,j in zip(x, y) if i == j)
+        trainAccuracy = correct_predictions*100.0/len(x)
+        trainingAccuracy[ep] = trainAccuracy
 
         logits = tf.matmul(XValid, weightEp) + biasEp
         Pi = tf.nn.softmax(logits)
-        value, classifications = tf.nn.top_k(Pi)
-        YExpanded = tf.expand_dims(YValid, -1)
-        validAccuracy, validUpdateOp = tf.metrics.accuracy(labels=YExpanded, predictions=classifications)
-        tf.local_variables_initializer().run()
-        _, updateOpValid = sess.run([validAccuracy, validUpdateOp], feed_dict={XValid:validData, YValid:validTarget})
-        validationAccuracy[ep] = sess.run(validAccuracy)        
+        x = sess.run(YValid, feed_dict={YValid:validTarget})
+        y = sess.run(tf.argmax(Pi, 1), feed_dict={XValid:validData})
+        correct_predictions = sum(1 for i,j in zip(x, y) if i == j)
+        validAccuracy = correct_predictions*100.0/len(x)
+        validationAccuracy[ep] = validAccuracy
 
         validationLoss[ep] = sess.run(validLoss, feed_dict={XValid:validData, YValid: validTarget})
 
-    accuracy, updateOp = calculateClassificationAccuracy(XTest, YTest, bestWeight[-1], bestBias[-1])
-    tf.local_variables_initializer().run()
-    _, updateOp = sess.run([accuracy, updateOp], feed_dict={XTest:testData, YTest:testTarget})
-    testAccuracy = sess.run(accuracy)
+    logits = tf.matmul(XTest, bestWeight[-1]) + bestBias[-1]
+    Pi = tf.nn.softmax(logits)
+    x = sess.run(YTest, feed_dict={YTest:testTarget})
+    y = sess.run(tf.argmax(Pi, 1), feed_dict={XTest:testData})
+    correct_predictions = sum(1 for i,j in zip(x, y) if i == j)
+    testAccuracy = correct_predictions*100.0/len(x)
+
     print("Best test Accuracy:", testAccuracy)
 
     plt.close('all')
@@ -162,7 +157,7 @@ if __name__ == "__main__":
     plt.xlabel('the n-th epoch')
     plt.ylabel('cross-entropy loss')
     plt.legend()
-    plt.title("cross-entropy loss vs number of epochs for learning rate %f and lambda %f" % (learnRates[bestLearningRateIdx], ldas[bestLdaIdx]))
+    plt.title("cross-entropy loss vs number of epochs learning rate %f lambda %f" % (learnRates[bestLearningRateIdx], ldas[bestLdaIdx]))
     fig.savefig("part2_2_2_loss.png")
     fig = plt.figure(2)
     plt.plot(range(epochs), trainingAccuracy, c='r', label='training')
@@ -170,7 +165,7 @@ if __name__ == "__main__":
     plt.xlabel('the n-th epoch')
     plt.ylabel('Classification accuracy')
     plt.legend()
-    plt.title("Classification accuracy vs number of epochs for learning rate %f and lambda %f" % (learnRates[bestLearningRateIdx], ldas[bestLdaIdx]))
+    plt.title("Classification accuracy vs number of epochs learning rate %f lambda %f" % (learnRates[bestLearningRateIdx], ldas[bestLdaIdx]))
     fig.savefig("part2_2_2_accuracy.png")
     print("Classification accuracy on training data: %f" % trainingAccuracy[-1])
     print("Classification accuracy on validation data: %f" % validationAccuracy[-1])

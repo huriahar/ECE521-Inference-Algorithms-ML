@@ -39,12 +39,12 @@ if __name__ == "__main__":
 
     # part1.2
     batchSizes = [500, 1500, 3500]
-    d = trainData.shape[1]      # 28*28 pixels/image = 784
+    d = trainData.shape[1]                  # 28*28 pixels/image = 784
     iteration = 20000.
     # chosen from part1.1
     learnRate = 0.005
     lda = 0.0
-    N = len(trainData)              # 3500
+    N = len(trainData)                      # 3500
 
     XValid = tf.placeholder(tf.float64, validData.shape)
     YValid = tf.placeholder(tf.float64, validTarget.shape)
@@ -59,7 +59,7 @@ if __name__ == "__main__":
         iterPerEpoch = int(np.ceil(float(N) / batchSize))
         epochs = int(np.ceil(iteration / float(iterPerEpoch)))
 
-        w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, seed=521, dtype=tf.float64), name="weights")
+        w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, dtype=tf.float64), name="weights")
         b = tf.Variable(0.0, dtype=tf.float64, name="biases")
         loss = calculateMSELoss(XTrain, YTrain, w, b, lda)
         init = tf.global_variables_initializer()
@@ -79,5 +79,3 @@ if __name__ == "__main__":
         end = time.time()
 
         print("Batch size %d: loss=%f , took %f seconds to execute" % (batchSize, L, end-start))
-
-

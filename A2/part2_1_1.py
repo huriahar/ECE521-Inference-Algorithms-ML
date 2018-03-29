@@ -73,8 +73,8 @@ if __name__ == "__main__":
     bestLearningRateIdx = 0
 
     for index, lr in enumerate(learnRate):
-        w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.1, seed=521, dtype=tf.float64), name="weights")
-        b = tf.Variable(tf.truncated_normal([1], stddev=0.1, seed=521, dtype=tf.float64), name="biases")
+        w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.1, dtype=tf.float64), name="weights")
+        b = tf.Variable(tf.truncated_normal([1], stddev=0.1, dtype=tf.float64), name="biases")
         TrainingLoss = [None for ep in range(epochs)]
         Weights = [None for ep in range(epochs)]
         Biases = [None for ep in range(epochs)]

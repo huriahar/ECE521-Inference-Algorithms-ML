@@ -52,11 +52,8 @@ if __name__ == "__main__":
     YTest = tf.placeholder(tf.float64, testTarget.shape)
 
     iteration = 20000.
-    w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, seed=521, dtype=tf.float64), name="weights")
-    b = tf.Variable(0.0, dtype=tf.float64, name="biases")
 
-    lda = 0.0       # lambda i.e. weight decay coefficient
-    loss = calculateMSELoss(XTrain, YTrain, w, b, lda)
+    lda = 0.0                                           # lambda i.e. weight decay coefficient
 
     N = len(trainData)                                   # 3500
     losses = []
@@ -67,8 +64,12 @@ if __name__ == "__main__":
     iterPerEpoch = int(N / batchSize)                       # 7
     epochs = int(np.ceil(iteration/float(iterPerEpoch)))    # 2858
     plt.close('all')
-    saver = tf.train.Saver()
     for index, lr in enumerate(learnRate):
+        w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, dtype=tf.float64), name="weights")
+        b = tf.Variable(0.0, dtype=tf.float64, name="biases")
+        tf.global_variables_initializer().run()
+        tf.local_variables_initializer().run()
+        loss = calculateMSELoss(XTrain, YTrain, w, b, lda)
         fig = plt.figure(index*2 + 1)
         optimizer = tf.train.GradientDescentOptimizer(lr).minimize(loss)
         L = [None for ep in range(epochs)]
@@ -92,9 +93,6 @@ if __name__ == "__main__":
         plt.ylabel('loss')
         plt.title("MSE vs number of epochs for learning rate of %f" % lr)
         fig.savefig("part1_1_learnrate_%d_zoomedin.png" % index)
-        w = tf.Variable(tf.truncated_normal([d, 1], stddev=0.5, seed=521, dtype=tf.float64), name="weights")
-        b = tf.Variable(0.0, dtype=tf.float64, name="biases")
-        sess.run(init)
 
     #####################
     fig = plt.figure((index+1)*2 + 1)
@@ -105,8 +103,4 @@ if __name__ == "__main__":
     plt.title("MSE vs number of epochs for different learning rates")
     plt.xlabel("Number of epochs")
     plt.ylabel("Men Squared Error")
-    fig.savefig("part1_1_AllInOne.png")
-
-    #print(sess.run(YTrain,{YTrain:trainTarget}))
-
-    
+    fig.savefig("part1_1_AllInOne.png")    

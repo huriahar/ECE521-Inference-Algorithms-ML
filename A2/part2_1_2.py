@@ -89,11 +89,11 @@ if __name__ == "__main__":
     TestLossAdam= [None for ep in range(epochs)]
     TestAccuracyAdam = [None for ep in range(epochs)]
 
-    wSGD = tf.Variable(tf.truncated_normal([d, 1], stddev=0.1, seed=521, dtype=tf.float64), name="weights")
-    bSGD = tf.Variable(tf.truncated_normal([1], stddev=0.1, seed=521, dtype=tf.float64), name="biases")
+    wSGD = tf.Variable(tf.truncated_normal([d, 1], stddev=0.1, dtype=tf.float64), name="weights")
+    bSGD = tf.Variable(tf.truncated_normal([1], stddev=0.1, dtype=tf.float64), name="biases")
 
-    wAD = tf.Variable(tf.truncated_normal([d, 1], stddev=0.1, seed=521, dtype=tf.float64), name="weights")
-    bAD = tf.Variable(tf.truncated_normal([1], stddev=0.1, seed=521, dtype=tf.float64), name="biases")
+    wAD = tf.Variable(tf.truncated_normal([d, 1], stddev=0.1, dtype=tf.float64), name="weights")
+    bAD = tf.Variable(tf.truncated_normal([1], stddev=0.1, dtype=tf.float64), name="biases")
    
 
     lossSGD = calculateCrossEntropyLoss(XTrain, YTrain, wSGD, bSGD, l)

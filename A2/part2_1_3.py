@@ -154,8 +154,8 @@ if __name__ == "__main__":
         TestAccuracyLinear[ep]= sess.run(accuracyLin,feed_dict={X:testData, Y:testTarget})
 
     # To Do: improve plots!!!!!!!
-    plt.scatter(range(epochs), TrainingLossLogistic, marker='.', c= 'r', label ="Logistic Regression")
-    plt.scatter(range(epochs), TrainingLossLinear, marker='*', c= 'b', label = "Linear Regression")
+    plt.plot(range(epochs), TrainingLossLogistic, c= 'r', label ="Logistic Regression")
+    plt.plot(range(epochs), TrainingLossLinear, c= 'b', label = "Linear Regression")
     plt.legend()
     plt.xlabel('the n-th epoch')
     plt.ylabel('loss/Accuracy')
@@ -163,8 +163,8 @@ if __name__ == "__main__":
     fig.savefig("part2_1_3_learnrate_loss.png")
 
     fig = plt.figure(2)
-    plt.scatter(range(epochs), TrainingAccuracyLogistic, marker='.', c='r', label='Logistic Regression')
-    plt.scatter(range(epochs), TrainingAccuracyLinear, marker='.', c='b', label='Linear Regression')
+    plt.plot(range(epochs), TrainingAccuracyLogistic, c='r', label='Logistic Regression')
+    plt.plot(range(epochs), TrainingAccuracyLinear, c='b', label='Linear Regression')
     plt.xlabel('the n-th epoch')
     plt.ylabel('accuracy')
     plt.legend()
@@ -237,8 +237,8 @@ if __name__ == "__main__":
     squaredDifferenceLoss = sess.run(squaredDifferenceLossDummy)
 
     fig = plt.figure(3)
-    plt.scatter(np.linspace(0.,1.,num=100), crossEntropyLoss, marker='.', c= 'r', label ="Cross Entropy Error Loss")
-    plt.scatter(np.linspace(0.,1.,num=100), squaredDifferenceLoss, marker='*', c= 'b', label = "MSE Loss")
+    plt.plot(np.linspace(0.,1.,num=100), crossEntropyLoss,  c= 'r', label ="Cross Entropy Error Loss")
+    plt.plot(np.linspace(0.,1.,num=100), squaredDifferenceLoss, c= 'b', label = "MSE Loss")
     plt.legend()
     plt.xlabel('prediction')
     plt.ylabel('loss')
