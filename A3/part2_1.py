@@ -110,7 +110,7 @@ if __name__ == '__main__':
                 validationLosses[idx][epoch], validationClassificationErrors[idx][epoch] = sess.run([crossEntropyLoss, classificationError], feed_dict={XNN:validData, YNN:validTarget})
                 testLosses[idx][epoch], testClassificationErrors[idx][epoch] = sess.run([crossEntropyLoss, classificationError], feed_dict={XNN:testData, YNN:testTarget})
 
-            # Check if this is the least loss seen so far. Best learning rate selected through least training loss
+            # Check if this is the least validation error seen so far. Best number of hidden units selected through least validation error
             if (validationClassificationErrors[idx][-1] < minimumValidationError):
                 minimumValidationError = validationClassificationErrors[idx][-1]
                 bestHiddenUnitsIdx = idx
@@ -137,6 +137,7 @@ if __name__ == '__main__':
         plt.ylabel("Cross Entropy Loss")
         fig.savefig("part2_1_ValidationLoss_HiddenUnits.png")
 
+        # Plot the validation classification errors for all hidden units
         fig = plt.figure(1)
         for idx in range(len(numHiddenUnits)):
             plt.plot(range(epochs), validationClassificationErrors[idx], c=colors[idx], label='Hidden Units = %d'%numHiddenUnits[idx])
