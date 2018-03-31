@@ -147,7 +147,7 @@ if __name__ == '__main__':
 
         # Plot the training, validation and test Cross entropy loss for best learning rate
         fig = plt.figure(1)
-        plt.plot(range(epochs), trainingLosses[bestLearningRateIdx], c='r', label='Training')
+        plt.plot(range(epochs), trainingLosses[bestLearningRateIdx], c='m', label='Training')
         plt.plot(range(epochs), validationLosses[bestLearningRateIdx], c='g', label='Validation')
         plt.plot(range(epochs), testLosses[bestLearningRateIdx], c='b', label='Test')
         plt.legend()
@@ -157,7 +157,7 @@ if __name__ == '__main__':
         fig.savefig("part1_2_CELoss.png")
 
         fig = plt.figure(2)
-        plt.plot(range(epochs), trainingClassificationErrors[bestLearningRateIdx], c='r', label='Training')
+        plt.plot(range(epochs), trainingClassificationErrors[bestLearningRateIdx], c='m', label='Training')
         plt.plot(range(epochs), validationClassificationErrors[bestLearningRateIdx], c='g', label='Validation')
         plt.plot(range(epochs), testClassificationErrors[bestLearningRateIdx], c='b', label='Test')
         plt.legend()
