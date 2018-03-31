@@ -40,6 +40,11 @@ def calculateAccuracy (predictedValues, actualValues):
     accuracy = tf.reduce_mean(tf.cast(correctPrediction, tf.float64))
     return accuracy*100
 
+def calculateClassificationError (predictedValues, actualValues):
+    correctPrediction = tf.equal(tf.squeeze(actualValues), tf.argmax(predictedValues, 1, output_type=tf.int32))
+    accuracy = tf.reduce_mean(tf.cast(correctPrediction, tf.float64))
+    return (1.0 - accuracy)*100
+
 if __name__ == '__main__':
     trainData, trainTarget, validData, validTarget, testData, testTarget = loadData("notMNIST.npz")
 
@@ -71,9 +76,9 @@ if __name__ == '__main__':
     trainingLosses = [[None for _ in range(epochs)] for _ in range(len(learningRates))]
     validationLosses = [[None for _ in range(epochs)] for _ in range(len(learningRates))]
     testLosses = [[None for _ in range(epochs)] for _ in range(len(learningRates))]
-    trainingAccuracies = [[None for _ in range(epochs)] for _ in range(len(learningRates))]
-    validationAccuracies = [[None for _ in range(epochs)] for _ in range(len(learningRates))] 
-    testAccuracies = [[None for _ in range(epochs)] for _ in range(len(learningRates))]
+    trainingClassificationErrors = [[None for _ in range(epochs)] for _ in range(len(learningRates))]
+    validationClassificationErrors = [[None for _ in range(epochs)] for _ in range(len(learningRates))]
+    testClassificationErrors = [[None for _ in range(epochs)] for _ in range(len(learningRates))]
 
     #saver = tf.train.Saver()
 
@@ -93,7 +98,7 @@ if __name__ == '__main__':
 
             crossEntropyLoss = calculateCrossEntropyLoss(outputLayerInput, WOutput, YNN, numClasses, lda)
             optimizer = tf.train.AdamOptimizer(lr).minimize(crossEntropyLoss)
-            accuracy = calculateAccuracy(outputLayerOutput, YNN)
+            classificationError = calculateClassificationError(outputLayerOutput, YNN)
 
             tf.global_variables_initializer().run()
 
@@ -106,9 +111,9 @@ if __name__ == '__main__':
                     feed = {XNN:XBatch, YNN:YBatch}
                     _ = sess.run(optimizer, feed_dict=feed)
 
-                trainingLosses[idx][epoch], trainingAccuracies[idx][epoch] = sess.run([crossEntropyLoss, accuracy], feed_dict={XNN:XBatch, YNN:YBatch})
-                validationLosses[idx][epoch], validationAccuracies[idx][epoch] = sess.run([crossEntropyLoss, accuracy], feed_dict={XNN:validData, YNN:validTarget})
-                testLosses[idx][epoch], testAccuracies[idx][epoch] = sess.run([crossEntropyLoss, accuracy], feed_dict={XNN:testData, YNN:testTarget})
+                trainingLosses[idx][epoch], trainingClassificationErrors[idx][epoch] = sess.run([crossEntropyLoss, classificationError], feed_dict={XNN:XBatch, YNN:YBatch})
+                validationLosses[idx][epoch], validationClassificationErrors[idx][epoch] = sess.run([crossEntropyLoss, classificationError], feed_dict={XNN:validData, YNN:validTarget})
+                testLosses[idx][epoch], testClassificationErrors[idx][epoch] = sess.run([crossEntropyLoss, classificationError], feed_dict={XNN:testData, YNN:testTarget})
                 # Save at epochs 100, 200, 300 and 400
                 #if (epoch != 0 and epoch % (epochs / 5) == 0):
                 #    saver.save(sess, '1_1_%f'%lr, global_step=epoch)
@@ -116,7 +121,7 @@ if __name__ == '__main__':
             end = time.time()
             print("Time taken for lr", lr, "is", end - start, "seconds")
             print("Minimum loss for learning rate", lr, "is:", trainingLosses[idx][-1])
-            print("Maximum accuracy for learning rate", lr, "is", trainingAccuracies[idx][-1])
+            print("Minimum classification error for learning rate", lr, "is", trainingClassificationErrors[idx][-1])
             # Check if this is the least loss seen so far. Best learning rate selected through least training loss
             if (trainingLosses[idx][-1] < minimumTrainingLoss):
                 minimumTrainingLoss = trainingLosses[idx][-1]
@@ -127,9 +132,9 @@ if __name__ == '__main__':
         # Plot the Cross entropy Losses for all learning rates
 
         print("Validation Cross Entropy loss:", validationLosses[bestLearningRateIdx][-1])
-        print("Validation Accuracy:", validationAccuracies[bestLearningRateIdx][-1])
+        print("Validation Classification error:", validationClassificationErrors[bestLearningRateIdx][-1])
         print("Test Cross Entropy loss:", testLosses[bestLearningRateIdx][-1])
-        print("Test Accuracy:", testAccuracies[bestLearningRateIdx][-1])
+        print("Test Classification error:", testClassificationErrors[bestLearningRateIdx][-1])
         fig = plt.figure(0)
         colors = ['r', 'g', 'b', 'c', 'm']
         for idx in range(len(learningRates)):
@@ -138,7 +143,7 @@ if __name__ == '__main__':
         plt.title("Training cross entropy loss vs no. of epochs for different learning rates")
         plt.xlabel("Number of epochs")
         plt.ylabel("Cross Entropy Loss")
-        fig.savefig("part1_1_LearningRates.png")
+        fig.savefig("part1_2_LearningRates.png")
 
         # Plot the training, validation and test Cross entropy loss for best learning rate
         fig = plt.figure(1)
@@ -149,14 +154,14 @@ if __name__ == '__main__':
         plt.title("Cross entropy loss vs no. of epochs for best learning rate: %f"%bestLearningRate)
         plt.xlabel("Number of epochs")
         plt.ylabel("Cross Entropy Loss")
-        fig.savefig("part1_1_CELoss.png")
+        fig.savefig("part1_2_CELoss.png")
 
         fig = plt.figure(2)
-        plt.plot(range(epochs), trainingAccuracies[bestLearningRateIdx], c='r', label='Training')
-        plt.plot(range(epochs), validationAccuracies[bestLearningRateIdx], c='g', label='Validation')
-        plt.plot(range(epochs), testAccuracies[bestLearningRateIdx], c='b', label='Test')
+        plt.plot(range(epochs), trainingClassificationErrors[bestLearningRateIdx], c='r', label='Training')
+        plt.plot(range(epochs), validationClassificationErrors[bestLearningRateIdx], c='g', label='Validation')
+        plt.plot(range(epochs), testClassificationErrors[bestLearningRateIdx], c='b', label='Test')
         plt.legend()
-        plt.title("Accuracy vs no.  of epochs for best learning rate: %f"%bestLearningRate)
+        plt.title("Classification Error vs no. of epochs for best learning rate: %f"%bestLearningRate)
         plt.xlabel("Number of epochs")
-        plt.ylabel("Accuracy")
-        fig.savefig("part1_1_Accuracy.png")
+        plt.ylabel("Classification Error (%)")
+        fig.savefig("part1_2_ClassificationError.png")
