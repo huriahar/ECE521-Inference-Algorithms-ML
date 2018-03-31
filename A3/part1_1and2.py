@@ -2,7 +2,6 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import time, copy
 
 def loadData (fileName):
     with np.load(fileName) as data:
@@ -51,8 +50,8 @@ if __name__ == '__main__':
     # ReLU activation function, cross-entropy cost function, softmax output layer
     # NN with 1 hidden layer and 1000 units
 
-    d = trainData.shape[1]  # 28*28 = 784
-    N = len(trainData)      # 15000
+    d = trainData.shape[1]                                  # 28*28 = 784
+    N = len(trainData)                                      # 15000
 
     batchSize = 500
 
@@ -70,7 +69,6 @@ if __name__ == '__main__':
     numHiddenUnits = 1000
     numClasses = 10
 
-    minimumTrainingLoss = float('inf')
     bestLearningRateIdx = 0
 
     trainingLosses = [[None for _ in range(epochs)] for _ in range(len(learningRates))]
@@ -79,8 +77,6 @@ if __name__ == '__main__':
     trainingClassificationErrors = [[None for _ in range(epochs)] for _ in range(len(learningRates))]
     validationClassificationErrors = [[None for _ in range(epochs)] for _ in range(len(learningRates))]
     testClassificationErrors = [[None for _ in range(epochs)] for _ in range(len(learningRates))]
-
-    #saver = tf.train.Saver()
 
     plt.close()
 
@@ -102,7 +98,6 @@ if __name__ == '__main__':
 
             tf.global_variables_initializer().run()
 
-            start = time.time()
             # Training
             for epoch in range(epochs):
                 for i in range(iterPerEpoch):
@@ -114,27 +109,26 @@ if __name__ == '__main__':
                 trainingLosses[idx][epoch], trainingClassificationErrors[idx][epoch] = sess.run([crossEntropyLoss, classificationError], feed_dict={XNN:XBatch, YNN:YBatch})
                 validationLosses[idx][epoch], validationClassificationErrors[idx][epoch] = sess.run([crossEntropyLoss, classificationError], feed_dict={XNN:validData, YNN:validTarget})
                 testLosses[idx][epoch], testClassificationErrors[idx][epoch] = sess.run([crossEntropyLoss, classificationError], feed_dict={XNN:testData, YNN:testTarget})
-                # Save at epochs 100, 200, 300 and 400
-                #if (epoch != 0 and epoch % (epochs / 5) == 0):
-                #    saver.save(sess, '1_1_%f'%lr, global_step=epoch)
 
-            end = time.time()
-            print("Time taken for lr", lr, "is", end - start, "seconds")
-            print("Minimum loss for learning rate", lr, "is:", trainingLosses[idx][-1])
-            print("Minimum classification error for learning rate", lr, "is", trainingClassificationErrors[idx][-1])
-            # Check if this is the least loss seen so far. Best learning rate selected through least training loss
-            if (trainingLosses[idx][-1] < minimumTrainingLoss):
-                minimumTrainingLoss = trainingLosses[idx][-1]
-                bestLearningRateIdx = idx
+            print("Minimum training loss for learning rate", lr, "is:", trainingLosses[idx][-1])
+            print("Minimum training classification error for learning rate", lr, "is", trainingClassificationErrors[idx][-1])
+            print("Minimum validation loss for learning rate", lr, "is:", validationLosses[idx][-1])
+            print("Minimum validation classification error for learning rate", lr, "is", validationClassificationErrors[idx][-1])
+            print('-'*100)
 
+        print('*'*100)
+        # Chosen best learning rate from looking at the figure and above metrics
+        bestLearningRateIdx = 2
         bestLearningRate = learningRates[bestLearningRateIdx]
         print("Best learning rate is", bestLearningRate)
-        # Plot the Cross entropy Losses for all learning rates
-
+        print("Training Cross Entropy loss:", trainingLosses[bestLearningRateIdx][-1])
+        print("Training Classification error:", trainingClassificationErrors[bestLearningRateIdx][-1])
         print("Validation Cross Entropy loss:", validationLosses[bestLearningRateIdx][-1])
         print("Validation Classification error:", validationClassificationErrors[bestLearningRateIdx][-1])
         print("Test Cross Entropy loss:", testLosses[bestLearningRateIdx][-1])
         print("Test Classification error:", testClassificationErrors[bestLearningRateIdx][-1])
+
+        # Plot the Cross entropy Losses for all learning rates
         fig = plt.figure(0)
         colors = ['r', 'g', 'b', 'c', 'm']
         for idx in range(len(learningRates)):
@@ -148,18 +142,19 @@ if __name__ == '__main__':
         # Plot the training, validation and test Cross entropy loss for best learning rate
         fig = plt.figure(1)
         plt.plot(range(epochs), trainingLosses[bestLearningRateIdx], c='m', label='Training')
-        plt.plot(range(epochs), validationLosses[bestLearningRateIdx], c='g', label='Validation')
-        plt.plot(range(epochs), testLosses[bestLearningRateIdx], c='b', label='Test')
+        plt.plot(range(epochs), validationLosses[bestLearningRateIdx], c='c', label='Validation')
+        plt.plot(range(epochs), testLosses[bestLearningRateIdx], c='y', label='Test')
         plt.legend()
         plt.title("Cross entropy loss vs no. of epochs for best learning rate: %f"%bestLearningRate)
         plt.xlabel("Number of epochs")
         plt.ylabel("Cross Entropy Loss")
         fig.savefig("part1_2_CELoss.png")
 
+        # Plot the training, validation and test classification error for best learning rate
         fig = plt.figure(2)
         plt.plot(range(epochs), trainingClassificationErrors[bestLearningRateIdx], c='m', label='Training')
-        plt.plot(range(epochs), validationClassificationErrors[bestLearningRateIdx], c='g', label='Validation')
-        plt.plot(range(epochs), testClassificationErrors[bestLearningRateIdx], c='b', label='Test')
+        plt.plot(range(epochs), validationClassificationErrors[bestLearningRateIdx], c='c', label='Validation')
+        plt.plot(range(epochs), testClassificationErrors[bestLearningRateIdx], c='y', label='Test')
         plt.legend()
         plt.title("Classification Error vs no. of epochs for best learning rate: %f"%bestLearningRate)
         plt.xlabel("Number of epochs")

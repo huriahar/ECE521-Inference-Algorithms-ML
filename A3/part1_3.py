@@ -2,7 +2,6 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import time, copy
 
 NUMVALID = 5
 
@@ -58,8 +57,8 @@ if __name__ == '__main__':
     # ReLU activation function, cross-entropy cost function, softmax output layer
     # NN with 1 hidden layer and 1000 units
 
-    d = trainData.shape[1]  # 28*28 = 784
-    N = len(trainData)      # 15000
+    d = trainData.shape[1]                                  # 28*28 = 784
+    N = len(trainData)                                      # 15000
 
     batchSize = 500
 
@@ -78,13 +77,10 @@ if __name__ == '__main__':
     finalClErrorEpochs = epochs
     ClErrorEarlyStopped = False
 
-    learningRate = 0.01             # Chosen from part 1.2
+    learningRate = 0.005                                    # Chosen from part 1.2
 
     numHiddenUnits = 1000
     numClasses = 10
-
-    minimumTrainingLoss = float('inf')
-    bestLearningRateIdx = 0
 
     trainingLoss = [None for _ in range(epochs)]
     validationLoss = [None for _ in range(epochs)]
@@ -127,13 +123,13 @@ if __name__ == '__main__':
                 # Check if validation error has been continuosly increasing for the last 5 epochs
                 # If so, early stop
                 if not CELossEarlyStopped and validationIncreasing(validationLoss[epoch-NUMVALID:epoch]):
-                    # Only epochs up till finalEpochs should be considered
-                    finalCELossEpochs = epoch
+                    # Only epochs up till finalCELossEpochs should be considered
+                    finalCELossEpochs = epoch - NUMVALID
                     CELossEarlyStopped = True
 
                 if not ClErrorEarlyStopped and validationIncreasing(validationClassificationError[epoch-NUMVALID:epoch]):
-                    # Only epochs up till finalEpochs should be considered
-                    finalClErrorEpochs = epoch
+                    # Only epochs up till finalClErrorEpochs should be considered
+                    finalClErrorEpochs = epoch - NUMVALID
                     ClErrorEarlyStopped = True
 
         print("Early Stopping Point for Cross Entropy Loss:", finalCELossEpochs)
@@ -143,22 +139,24 @@ if __name__ == '__main__':
         print("Validation Classification Error at stop point:", validationClassificationError[finalClErrorEpochs])
         print("Test Classification Error at stop point:", testClassificationError[finalClErrorEpochs])
 
+        # Plot the training, validation and test cross entropy loss for best learning rate
         fig = plt.figure(0)
         plt.plot(range(epochs), trainingLoss, c='m', label='Training')
-        plt.plot(range(epochs), validationLoss, c='g', label='Validation')
-        plt.plot(range(epochs), testLoss, c='b', label='Test')
-        plt.axvline(x=finalCELossEpochs, c='r', label='Early Stop Point')
+        plt.plot(range(epochs), validationLoss, c='c', label='Validation')
+        plt.plot(range(epochs), testLoss, c='y', label='Test')
+        plt.axvline(x=finalCELossEpochs, c='r', label='Early Stopping Point')
         plt.legend()
         plt.title("Cross Entropy Loss vs no. of epochs for learning rate: %f"%learningRate)
         plt.xlabel("Number of epochs")
         plt.ylabel("Cross Entropy Loss")
         fig.savefig("part1_3_CELoss.png")
 
+        # Plot the training, validation and test classification error for best learning rate
         fig = plt.figure(1)
         plt.plot(range(epochs), trainingClassificationError, c='m', label='Training')
-        plt.plot(range(epochs), validationClassificationError, c='g', label='Validation')
-        plt.plot(range(epochs), testClassificationError, c='b', label='Test')
-        plt.axvline(x=finalClErrorEpochs, c='r', label='Early Stop Point')
+        plt.plot(range(epochs), validationClassificationError, c='c', label='Validation')
+        plt.plot(range(epochs), testClassificationError, c='y', label='Test')
+        plt.axvline(x=finalClErrorEpochs, c='r', label='Early Stopping Point')
         plt.legend()
         plt.title("Classification Error vs no. of epochs for learning rate: %f"%learningRate)
         plt.xlabel("Number of epochs")
