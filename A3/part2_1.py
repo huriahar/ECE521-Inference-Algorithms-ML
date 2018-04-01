@@ -29,7 +29,7 @@ def layerBuildingBlock (XLMinus1, numHiddenUnits):
 
 def calculateCrossEntropyLoss (logits, weights, y, numClasses, lambdaParam):
     labels = tf.squeeze(tf.one_hot(y, numClasses, dtype=tf.float64))
-    loss_d = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=logits))
+    loss_d = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits))
     loss_w = lambdaParam*tf.nn.l2_loss(weights)
     crossEntropyLoss = loss_d + loss_w
     return crossEntropyLoss
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     numHiddenUnits = [100, 500, 1000]
     numClasses = 10
 
-    minimumValidationError = float('inf')
+    minimumValidationCELoss = float('inf')
     bestHiddenUnitsIdx = 0
 
     trainingLosses = [[None for _ in range(epochs)] for _ in range(len(numHiddenUnits))]
@@ -111,13 +111,13 @@ if __name__ == '__main__':
                 testLosses[idx][epoch], testClassificationErrors[idx][epoch] = sess.run([crossEntropyLoss, classificationError], feed_dict={XNN:testData, YNN:testTarget})
 
             # Check if this is the least validation error seen so far. Best number of hidden units selected through least validation error
-            if (validationClassificationErrors[idx][-1] < minimumValidationError):
-                minimumValidationError = validationClassificationErrors[idx][-1]
+            if (validationLosses[idx][-1] < minimumValidationCELoss):
+                minimumValidationCELoss = validationLosses[idx][-1]
                 bestHiddenUnitsIdx = idx
 
         for idx in range(len(numHiddenUnits)):
-            print("Last validation classification error for hidden units", numHiddenUnits[idx], ":", validationClassificationErrors[idx][-1])
-            print("Best (Minimum ) validation classification error for hidden units", numHiddenUnits[idx], ":", min(validationClassificationErrors[idx]))
+            print("Last validation cross entropy loss for hidden units", numHiddenUnits[idx], ":", validationLosses[idx][-1])
+            print("Best (Minimum) validation cross entropy loss for hidden units", numHiddenUnits[idx], ":", min(validationLosses[idx]))
             print('-'*100)
         
         bestHiddenUnits = numHiddenUnits[bestHiddenUnitsIdx]

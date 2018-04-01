@@ -31,7 +31,7 @@ def layerBuildingBlock (XLMinus1, numHiddenUnits):
 
 def calculateCrossEntropyLoss (logits, weights, y, numClasses, lambdaParam):
     labels = tf.squeeze(tf.one_hot(y, numClasses, dtype=tf.float64))
-    loss_d = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=logits))
+    loss_d = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits))
     loss_w = lambdaParam*tf.nn.l2_loss(weights)
     crossEntropyLoss = loss_d + loss_w
     return crossEntropyLoss
