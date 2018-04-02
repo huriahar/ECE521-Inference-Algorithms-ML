@@ -125,8 +125,11 @@ if __name__ == '__main__':
         print("Training Classification error:", trainingClassificationErrors[bestLearningRateIdx][-1])
         print("Validation Cross Entropy loss:", validationLosses[bestLearningRateIdx][-1])
         print("Validation Classification error:", validationClassificationErrors[bestLearningRateIdx][-1])
+
         print("Test Cross Entropy loss:", testLosses[bestLearningRateIdx][-1])
+        print("Min Test Cross Entropy loss:", min(testLosses[bestLearningRateIdx]))
         print("Test Classification error:", testClassificationErrors[bestLearningRateIdx][-1])
+        print("Min Test Classification error:", min(testClassificationErrors[bestLearningRateIdx]))
 
         # Plot the Cross entropy Losses for all learning rates
         fig = plt.figure(0)
