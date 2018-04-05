@@ -111,8 +111,8 @@ if __name__ == '__main__':
                 testLosses[idx][epoch], testClassificationErrors[idx][epoch] = sess.run([crossEntropyLoss, classificationError], feed_dict={XNN:testData, YNN:testTarget})
 
             # Check if this is the least validation error seen so far. Best number of hidden units selected through least validation error
-            if (validationLosses[idx][-1] < minimumValidationCELoss):
-                minimumValidationCELoss = validationLosses[idx][-1]
+            if (min(validationLosses[idx]) < minimumValidationCELoss):
+                minimumValidationCELoss = min(validationLosses[idx])
                 bestHiddenUnitsIdx = idx
 
         for idx in range(len(numHiddenUnits)):
