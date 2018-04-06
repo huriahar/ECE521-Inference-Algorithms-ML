@@ -56,7 +56,7 @@ if __name__ == '__main__':
     plt.close()
 
     with tf.Session() as sess:
-        for m in range(1):
+        for m in range(5):
             # Training parameters
             seed = int(time.time()) % 1000
             tf.set_random_seed(seed)

@@ -86,11 +86,13 @@ if __name__ == '__main__':
 
         for idx, lr in enumerate(learningRates):
 
-            hiddenLayerInput, WHidden, BHidden = layerBuildingBlock(XNN, numHiddenUnits)
-            hiddenLayerOutput = tf.nn.relu(hiddenLayerInput)
+            with tf.variable_scope("hiddenLayer"):
+                hiddenLayerInput, WHidden, BHidden = layerBuildingBlock(XNN, numHiddenUnits)
+                hiddenLayerOutput = tf.nn.relu(hiddenLayerInput)
 
-            outputLayerInput, WOutput, BOutput = layerBuildingBlock(hiddenLayerOutput, numClasses)
-            outputLayerOutput = tf.nn.softmax(outputLayerInput)
+            with tf.variable_scope("outputLayer"):
+                outputLayerInput, WOutput, BOutput = layerBuildingBlock(hiddenLayerOutput, numClasses)
+                outputLayerOutput = tf.nn.softmax(outputLayerInput)
 
             crossEntropyLoss = calculateCrossEntropyLoss(outputLayerInput, WOutput, YNN, numClasses, lda)
             optimizer = tf.train.AdamOptimizer(lr).minimize(crossEntropyLoss)
@@ -110,10 +112,10 @@ if __name__ == '__main__':
                 validationLosses[idx][epoch], validationClassificationErrors[idx][epoch] = sess.run([crossEntropyLoss, classificationError], feed_dict={XNN:validData, YNN:validTarget})
                 testLosses[idx][epoch], testClassificationErrors[idx][epoch] = sess.run([crossEntropyLoss, classificationError], feed_dict={XNN:testData, YNN:testTarget})
 
-            print("Minimum training loss for learning rate", lr, "is:", trainingLosses[idx][-1])
-            print("Minimum training classification error for learning rate", lr, "is", trainingClassificationErrors[idx][-1])
-            print("Minimum validation loss for learning rate", lr, "is:", validationLosses[idx][-1])
-            print("Minimum validation classification error for learning rate", lr, "is", validationClassificationErrors[idx][-1])
+            print("Last training loss for learning rate", lr, "is:", trainingLosses[idx][-1])
+            print("Last training classification error for learning rate", lr, "is", trainingClassificationErrors[idx][-1])
+            print("Last validation loss for learning rate", lr, "is:", validationLosses[idx][-1])
+            print("Last validation classification error for learning rate", lr, "is", validationClassificationErrors[idx][-1])
             print('-'*100)
 
         print('*'*100)
@@ -121,12 +123,15 @@ if __name__ == '__main__':
         bestLearningRateIdx = 2
         bestLearningRate = learningRates[bestLearningRateIdx]
         print("Best learning rate is", bestLearningRate)
-        print("Training Cross Entropy loss:", trainingLosses[bestLearningRateIdx][-1])
-        print("Training Classification error:", trainingClassificationErrors[bestLearningRateIdx][-1])
-        print("Validation Cross Entropy loss:", validationLosses[bestLearningRateIdx][-1])
-        print("Validation Classification error:", validationClassificationErrors[bestLearningRateIdx][-1])
-        print("Test Cross Entropy loss:", testLosses[bestLearningRateIdx][-1])
-        print("Test Classification error:", testClassificationErrors[bestLearningRateIdx][-1])
+        print("Last Training Cross Entropy loss:", trainingLosses[bestLearningRateIdx][-1])
+        print("Last Training Classification error:", trainingClassificationErrors[bestLearningRateIdx][-1])
+        print("Last Validation Cross Entropy loss:", validationLosses[bestLearningRateIdx][-1])
+        print("Last Validation Classification error:", validationClassificationErrors[bestLearningRateIdx][-1])
+
+        print("Last Test Cross Entropy loss:", testLosses[bestLearningRateIdx][-1])
+        print("Min Test Cross Entropy loss:", min(testLosses[bestLearningRateIdx]))
+        print("Last Test Classification error:", testClassificationErrors[bestLearningRateIdx][-1])
+        print("Min Test Classification error:", min(testClassificationErrors[bestLearningRateIdx]))
 
         # Plot the Cross entropy Losses for all learning rates
         fig = plt.figure(0)

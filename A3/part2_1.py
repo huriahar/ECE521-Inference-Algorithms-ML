@@ -87,11 +87,13 @@ if __name__ == '__main__':
 
         for idx, hiddenUnits in enumerate(numHiddenUnits):
 
-            hiddenLayerInput, WHidden, BHidden = layerBuildingBlock(XNN, hiddenUnits)
-            hiddenLayerOutput = tf.nn.relu(hiddenLayerInput)
+            with tf.variable_scope("hiddenLayer"):
+                hiddenLayerInput, WHidden, BHidden = layerBuildingBlock(XNN, hiddenUnits)
+                hiddenLayerOutput = tf.nn.relu(hiddenLayerInput)
 
-            outputLayerInput, WOutput, BOutput = layerBuildingBlock(hiddenLayerOutput, numClasses)
-            outputLayerOutput = tf.nn.softmax(outputLayerInput)
+            with tf.variable_scope("outputLayer"):
+                outputLayerInput, WOutput, BOutput = layerBuildingBlock(hiddenLayerOutput, numClasses)
+                outputLayerOutput = tf.nn.softmax(outputLayerInput)
 
             crossEntropyLoss = calculateCrossEntropyLoss(outputLayerInput, WOutput, YNN, numClasses, lda)
             optimizer = tf.train.AdamOptimizer(learningRate).minimize(crossEntropyLoss)
@@ -111,8 +113,8 @@ if __name__ == '__main__':
                 testLosses[idx][epoch], testClassificationErrors[idx][epoch] = sess.run([crossEntropyLoss, classificationError], feed_dict={XNN:testData, YNN:testTarget})
 
             # Check if this is the least validation error seen so far. Best number of hidden units selected through least validation error
-            if (validationLosses[idx][-1] < minimumValidationCELoss):
-                minimumValidationCELoss = validationLosses[idx][-1]
+            if (min(validationLosses[idx]) < minimumValidationCELoss):
+                minimumValidationCELoss = min(validationLosses[idx])
                 bestHiddenUnitsIdx = idx
 
         for idx in range(len(numHiddenUnits)):
@@ -146,3 +148,4 @@ if __name__ == '__main__':
         plt.xlabel("Number of epochs")
         plt.ylabel("Classification Error")
         fig.savefig("part2_1_ValidationClErrror_HiddenUnits.png")
+

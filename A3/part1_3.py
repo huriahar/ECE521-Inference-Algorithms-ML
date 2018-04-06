@@ -95,11 +95,13 @@ if __name__ == '__main__':
         init = tf.global_variables_initializer()
         sess.run(init)
 
-        hiddenLayerInput, WHidden, BHidden = layerBuildingBlock(XNN, numHiddenUnits)
-        hiddenLayerOutput = tf.nn.relu(hiddenLayerInput)
+        with tf.variable_scope("hiddenLayer"):
+            hiddenLayerInput, WHidden, BHidden = layerBuildingBlock(XNN, numHiddenUnits)
+            hiddenLayerOutput = tf.nn.relu(hiddenLayerInput)
 
-        outputLayerInput, WOutput, BOutput = layerBuildingBlock(hiddenLayerOutput, numClasses)
-        outputLayerOutput = tf.nn.softmax(outputLayerInput)
+        with tf.variable_scope("outputLayer"):
+            outputLayerInput, WOutput, BOutput = layerBuildingBlock(hiddenLayerOutput, numClasses)
+            outputLayerOutput = tf.nn.softmax(outputLayerInput)
 
         crossEntropyLoss = calculateCrossEntropyLoss(outputLayerInput, WOutput, YNN, numClasses, lda)
         optimizer = tf.train.AdamOptimizer(learningRate).minimize(crossEntropyLoss)
