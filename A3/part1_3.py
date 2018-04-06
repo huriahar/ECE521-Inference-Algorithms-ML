@@ -4,7 +4,9 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 NUMVALID = 5
-
+#This a globalvariable which has been introduced for visualization of hidden neuron weights for part 1.3.2
+#Please change the value to True in order to see the visualizations
+ENABLEDROPOUT = False
 def loadData (fileName):
     with np.load(fileName) as data:
         Data, Target = data["images"], data["labels"]
@@ -82,6 +84,10 @@ if __name__ == '__main__':
     numHiddenUnits = 1000
     numClasses = 10
 
+    # If ENABLEDDROPOUT is true then save the training Hidden layer weights for the visualization for part 1.3.2 in the assignment
+    if ENABLEDROPOUT:
+        trainingHiddenLayerWeights= [None for _ in range(epochs)]
+
     trainingLoss = [None for _ in range(epochs)]
     validationLoss = [None for _ in range(epochs)]
     testLoss = [None for _ in range(epochs)]
@@ -95,13 +101,11 @@ if __name__ == '__main__':
         init = tf.global_variables_initializer()
         sess.run(init)
 
-        with tf.variable_scope("hiddenLayer"):
-            hiddenLayerInput, WHidden, BHidden = layerBuildingBlock(XNN, numHiddenUnits)
-            hiddenLayerOutput = tf.nn.relu(hiddenLayerInput)
+        hiddenLayerInput, WHidden, BHidden = layerBuildingBlock(XNN, numHiddenUnits)
+        hiddenLayerOutput = tf.nn.relu(hiddenLayerInput)
 
-        with tf.variable_scope("outputLayer"):
-            outputLayerInput, WOutput, BOutput = layerBuildingBlock(hiddenLayerOutput, numClasses)
-            outputLayerOutput = tf.nn.softmax(outputLayerInput)
+        outputLayerInput, WOutput, BOutput = layerBuildingBlock(hiddenLayerOutput, numClasses)
+        outputLayerOutput = tf.nn.softmax(outputLayerInput)
 
         crossEntropyLoss = calculateCrossEntropyLoss(outputLayerInput, WOutput, YNN, numClasses, lda)
         optimizer = tf.train.AdamOptimizer(learningRate).minimize(crossEntropyLoss)
@@ -115,7 +119,12 @@ if __name__ == '__main__':
                 XBatch = trainData[i*batchSize:(i+1)*batchSize]
                 YBatch = trainTarget[i*batchSize:(i+1)*batchSize]
                 feed = {XNN:XBatch, YNN:YBatch}
-                _ = sess.run(optimizer, feed_dict=feed)
+                 # If ENABLEDDROPOUT is true then save the training Hidden layer weights for the visualization for part 1.3.2 in the assignment
+                if ENABLEDROPOUT==False:
+                    _ = sess.run(optimizer, feed_dict=feed)
+                else:
+                    _,trainingHiddenLayerWeights[epoch]= sess.run([optimizer,WHidden],feed_dict=feed)
+
 
             trainingLoss[epoch], trainingClassificationError[epoch] = sess.run([crossEntropyLoss, classificationError], feed_dict={XNN:XBatch, YNN:YBatch})
             validationLoss[epoch], validationClassificationError[epoch] = sess.run([crossEntropyLoss, classificationError], feed_dict={XNN:validData, YNN:validTarget})
@@ -164,3 +173,27 @@ if __name__ == '__main__':
         plt.xlabel("Number of epochs")
         plt.ylabel("Classification Error (%)")
         fig.savefig("part1_3_ClassificationError.png")
+
+        # If ENABLEDDROPOUT is true then save the training Hidden layer weights for the visualization for part 1.3.2 in the assignment
+        if ENABLEDROPOUT:
+
+            #plt.close('all')
+            imageIndex = 25
+            indices = [int((25.0*finalClErrorEpochs)/100.0),finalClErrorEpochs]
+            print(indices)
+            for i in indices:
+                weights1 = np.array(trainingHiddenLayerWeights[i][:,0:100])
+                print(weights1.shape)
+                weights1 = np.reshape(weights1,[28,28,100])
+
+                figure, ax = plt.subplots(10,10,sharex='col',sharey='row')
+
+                for i in range(10):
+                    for j in range(10):
+                        ax[i,j].imshow(weights1[:,:,10*i+j],cmap=plt.cm.gray,interpolation="nearest")
+                        ax[i,j].axis('off')
+                plt.axis('off')
+                plt.show()
+                figure.savefig("No_DropOut_Weights_%f.png" % imageIndex)
+                imageIndex *=4
+

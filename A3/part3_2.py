@@ -4,7 +4,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 NUMVALID = 5
-
+#visualizations for non-dropout case is done in part1_3.py.In part1_3.py please change the value of ENABLEDROPOUT to True to see the visualizations
 def loadData (fileName):
     with np.load(fileName) as data:
         Data, Target = data["images"], data["labels"]
