@@ -56,7 +56,8 @@ if __name__ == '__main__':
     KeepProbability = tf.placeholder(tf.float64)
 
     iteration = 6000.
-    lda = 3e-4
+    ldaDropOut = 0.0
+    lda= 3e-4
 
     iterPerEpoch = int(N / batchSize)                       # 30
     epochs = int(np.ceil(iteration/float(iterPerEpoch)))    # 200
@@ -102,7 +103,7 @@ if __name__ == '__main__':
         outputLayerInputDropOut, WOutputDropOut, BOutputDropOut = layerBuildingBlock(dropOutHiddenLayer, numClasses) 
         outputLayerOutputDropOut = tf.nn.softmax(outputLayerInputDropOut)
 
-        crossEntropyLossDropOut = calculateCrossEntropyLoss(outputLayerInputDropOut, WOutputDropOut, YNN, numClasses, learningRate)
+        crossEntropyLossDropOut = calculateCrossEntropyLoss(outputLayerInputDropOut, WOutputDropOut, YNN, numClasses, ldaDropOut)
         optimizerDropOut = tf.train.AdamOptimizer(learningRate).minimize(crossEntropyLossDropOut)
         classificationErrorDropOut = calculateClassificationError(outputLayerOutputDropOut, YNN)
         
@@ -110,7 +111,7 @@ if __name__ == '__main__':
         outputLayerInput, WOutput, BOutput = layerBuildingBlock(hiddenLayerOutput, numClasses) 
         outputLayerOutput = tf.nn.softmax(outputLayerInput)
 
-        crossEntropyLoss = calculateCrossEntropyLoss(outputLayerInput, WOutput, YNN, numClasses, learningRate)
+        crossEntropyLoss = calculateCrossEntropyLoss(outputLayerInput, WOutput, YNN, numClasses, lda)
         optimizer = tf.train.AdamOptimizer(learningRate).minimize(crossEntropyLoss)
         classificationError = calculateClassificationError(outputLayerOutput, YNN)
 
@@ -156,7 +157,7 @@ if __name__ == '__main__':
         plt.title("Training Classification Error vs no. of epochs for learning rate: %f"%learningRate)
         plt.xlabel("Number of epochs")
         plt.ylabel("Classification Error (%)")
-        fig.savefig("part1_3_TrainingClassificationError_Dropout.png")
+        fig.savefig("part_3_1_TrainingClassificationError_Dropout.png")
 
           # Plot the training, validation and test classification error for best learning rate
         fig = plt.figure(1)
@@ -166,5 +167,5 @@ if __name__ == '__main__':
         plt.title("Validation Classification Error vs no. of epochs for learning rate: %f"%learningRate)
         plt.xlabel("Number of epochs")
         plt.ylabel("Classification Error (%)")
-        fig.savefig("part1_3_ValidationClassificationError_Dropout.png")
+        fig.savefig("part_3_1_ValidationClassificationError_Dropout.png")
 
