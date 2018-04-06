@@ -50,9 +50,6 @@ def validationIncreasing (validationPartial):
     result = all(validationPartial[i] <= validationPartial[i + 1] for i in range(len(validationPartial) - 1))
     return result
 
-# def generateImage(weights):
-#     weights = tf.unstack(weights,100)
-
 
 if __name__ == '__main__':
     trainData, trainTarget, validData, validTarget, testData, testTarget = loadData("notMNIST.npz")
@@ -128,13 +125,6 @@ if __name__ == '__main__':
         optimizerDropOut = tf.train.AdamOptimizer(learningRate).minimize(crossEntropyLossDropOut)
         classificationErrorDropOut = calculateClassificationError(outputLayerOutputDropOut, YNN)
         
-        #Case: No Dropout
-        outputLayerInput, WOutput, BOutput = layerBuildingBlock(hiddenLayerOutput, numClasses) 
-        outputLayerOutput = tf.nn.softmax(outputLayerInput)
-
-        crossEntropyLoss = calculateCrossEntropyLoss(outputLayerInput, WOutput, YNN, numClasses, lda)
-        optimizer = tf.train.AdamOptimizer(learningRate).minimize(crossEntropyLoss)
-        classificationError = calculateClassificationError(outputLayerOutput, YNN)
 
         tf.global_variables_initializer().run()
 
@@ -143,15 +133,7 @@ if __name__ == '__main__':
                 XBatch = trainData[i*batchSize:(i+1)*batchSize]
                 YBatch = trainTarget[i*batchSize:(i+1)*batchSize]
                 feed = {XNN:XBatch, YNN:YBatch, KeepProbability: 0.5}
-                _,trainingHiddenLayerWeights[epoch] = sess.run([optimizer,WHidden],feed_dict=feed)
                 _,trainingHiddenLayerWeightsDropOut[epoch] = sess.run([optimizerDropOut,WHidden],feed_dict=feed)
-            
-            #Case: No Dropout
-            trainingLoss[epoch], trainingClassificationError[epoch]= sess.run([crossEntropyLoss,classificationError], feed_dict= feed)
-            feed = {XNN:validData, YNN:validTarget, KeepProbability:1.0}
-            validationLoss[epoch], validationClassificationError[epoch] = sess.run([crossEntropyLoss, classificationError], feed_dict=feed)
-            feed = {XNN:testData, YNN:testTarget, KeepProbability:1.0}
-            testLoss[epoch], testClassificationError[epoch] = sess.run([crossEntropyLoss, classificationError], feed_dict=feed)
 
             #Case: Dropout
             trainingLossDropOut[epoch],trainingClassificationErrorDropOut[epoch] = sess.run([crossEntropyLossDropOut,classificationErrorDropOut], feed_dict= feed)
@@ -174,20 +156,8 @@ if __name__ == '__main__':
                     finalClErrorEpochsDropOut = epoch - NUMVALID
                     ClErrorEarlyStoppedDropOut = True
 
-                if not CELossEarlyStopped and validationIncreasing(validationLoss[epoch-NUMVALID:epoch]):
-                    # Only epochs up till finalCELossEpochs should be considered
-                    finalCELossEpochs = epoch - NUMVALID
-                    CELossEarlyStopped = True
-
-                if not ClErrorEarlyStopped and validationIncreasing(validationClassificationError[epoch-NUMVALID:epoch]):
-                    # Only epochs up till finalClErrorEpochs should be considered
-                    finalClErrorEpochs = epoch - NUMVALID
-                    ClErrorEarlyStopped = True
-
         print("Stopping point for ce loss dropout: %f", finalCELossEpochsDropOut)
         print("Stopping point for classification error dropout: %f", finalClErrorEpochsDropOut)
-        print("Stopping point for ce loss: %f", finalCELossEpochs)
-        print("Stopping point for classification error: %f", finalClErrorEpochs)
 
         #image generation
         #Dropout
@@ -207,47 +177,19 @@ if __name__ == '__main__':
                     ax[i,j].imshow(weights1[:,:,10*i+j],cmap=plt.cm.gray,interpolation="nearest")
                     ax[i,j].axis('off')
             plt.axis('off')
-            plt.show()
+            #plt.show()
             figure.savefig("DropOut_Weights_%f.png" % imageIndex)
             imageIndex *=4
 
-        #No Dropout
-        plt.close('all')
-        imageIndex = 25
-        indices = [int((25.0*finalClErrorEpochs)/100.0),finalClErrorEpochs]
-        print(indices)
-        for i in indices:
-            weights1 = np.array(trainingHiddenLayerWeights[i][:,0:100])
-            print(weights1.shape)
-            weights1 = np.reshape(weights1,[28,28,100])
-
-            figure, ax = plt.subplots(10,10,sharex='col',sharey='row')
-
-            for i in range(10):
-                for j in range(10):
-                    ax[i,j].imshow(weights1[:,:,10*i+j],cmap=plt.cm.gray,interpolation="nearest")
-                    ax[i,j].axis('off')
-            plt.axis('off')
-            plt.show()
-            figure.savefig("No_DropOut_Weights_%f.png" % imageIndex)
-            imageIndex *=4
-
-       
+        
         print("Dropout")
         print("Training Classification Error: %f", trainingClassificationErrorDropOut[epoch])
         print("Validation Classification Error: %f", validationClassificationErrorDropOut[epoch])
         print("Test Classification Error: %f", testClassificationErrorDropOut[epoch])
-        print("-----------------------------------------------------------------------------------------")
-        print("No Dropout")
-        print("Training Classification Error: %f", trainingClassificationError[epoch])
-        print("Validation Classification Error: %f", validationClassificationError[epoch])
-        print("Test Classification Error: %f", testClassificationError[epoch])
-
-
+     
         # Plot the training, validation and test classification error for best learning rate
         fig = plt.figure(0)
         plt.plot(range(epochs), trainingClassificationErrorDropOut, c='m', label='Training with Dropout')
-        #plt.plot(range(epochs), trainingClassificationError, c='c', label='Training without Dropout')
         plt.legend()
         plt.title("Training Classification Error vs no. of epochs for learning rate: %f"%learningRate)
         plt.xlabel("Number of epochs")
@@ -257,7 +199,6 @@ if __name__ == '__main__':
           # Plot the training, validation and test classification error for best learning rate
         fig = plt.figure(1)
         plt.plot(range(epochs), validationClassificationErrorDropOut, c='m', label='Validation with Dropout')
-        #plt.plot(range(epochs), validationClassificationError, c='c', label='Validation without Dropout')
         plt.legend()
         plt.title("Validation Classification Error vs no. of epochs for learning rate: %f"%learningRate)
         plt.xlabel("Number of epochs")
