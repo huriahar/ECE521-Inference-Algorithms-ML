@@ -82,14 +82,17 @@ if __name__ == '__main__':
         init = tf.global_variables_initializer()
         sess.run(init)
 
-        firstHiddenLayerInput, WFirstHidden, BFirstHidden = layerBuildingBlock(XNN, numHiddenUnits[0])
-        firstHiddenLayerOutput = tf.nn.relu(firstHiddenLayerInput)
+        with tf.variable_scope("hiddenLayer1"):
+            firstHiddenLayerInput, WFirstHidden, BFirstHidden = layerBuildingBlock(XNN, numHiddenUnits[0])
+            firstHiddenLayerOutput = tf.nn.relu(firstHiddenLayerInput)
 
-        secondHiddenLayerInput, WSecondHidden, BSecondHidden = layerBuildingBlock(firstHiddenLayerOutput, numHiddenUnits[1])
-        secondHiddenLayerOutput = tf.nn.relu(secondHiddenLayerInput)
+        with tf.variable_scope("hiddenLayer2"):
+            secondHiddenLayerInput, WSecondHidden, BSecondHidden = layerBuildingBlock(firstHiddenLayerOutput, numHiddenUnits[1])
+            secondHiddenLayerOutput = tf.nn.relu(secondHiddenLayerInput)
 
-        outputLayerInput, WOutput, BOutput = layerBuildingBlock(secondHiddenLayerOutput, numClasses)
-        outputLayerOutput = tf.nn.softmax(outputLayerInput)
+        with tf.variable_scope("outputLayer"):
+            outputLayerInput, WOutput, BOutput = layerBuildingBlock(secondHiddenLayerOutput, numClasses)
+            outputLayerOutput = tf.nn.softmax(outputLayerInput)
 
         crossEntropyLoss = calculateCrossEntropyLoss(outputLayerInput, WOutput, YNN, numClasses, lda)
         optimizer = tf.train.AdamOptimizer(learningRate).minimize(crossEntropyLoss)
